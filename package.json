@@ -7,9 +7,12 @@
   "scripts": {
     "compress": "node scripts/process-images.mjs",
     "build": "npm run compress",
-    "serve": "python -m http.server 8000 --directory public"
+    "serve": "node server.mjs",
+    "dev": "node --watch server.mjs"
   },
   "dependencies": {
+    "express": "^5.2.1",
+    "multer": "^2.2.0",
     "sharp": "^0.35.4"
   },
   "engines": {

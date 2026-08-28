@@ -37,8 +37,11 @@ function orientedDimensions(metadata) {
     : { width: metadata.width, height: metadata.height };
 }
 
-function captionSvg(width, height, index, label) {
-  const titleSize = clamp(Math.round(width * 0.042), 30, 68);
+function captionSvg(width, height, index, label, customTitle) {
+  const fallbackTitle = `MEMORY ${String(index).padStart(2, "0")}`;
+  const displayTitle = String(customTitle || fallbackTitle).slice(0, 34);
+  const lengthScale = displayTitle.length > 20 ? 0.72 : displayTitle.length > 14 ? 0.84 : 1;
+  const titleSize = Math.round(clamp(width * 0.042, 30, 68) * lengthScale);
   const tagSize = clamp(Math.round(width * 0.018), 16, 28);
   const left = Math.round(width * 0.075);
   const titleY = Math.round(height * 0.46);
@@ -49,7 +52,7 @@ function captionSvg(width, height, index, label) {
       <text x="${left}" y="${titleY}"
         fill="#25232a" font-size="${titleSize}" font-weight="700"
         font-style="italic" letter-spacing="2"
-        font-family="Segoe Print, Comic Sans MS, cursive">MEMORY ${String(index).padStart(2, "0")}</text>
+        font-family="Segoe Print, Comic Sans MS, cursive">${escapeXml(displayTitle)}</text>
       <text x="${left}" y="${tagY}"
         fill="#8a8580" font-size="${tagSize}" font-weight="600"
         letter-spacing="2" font-family="Arial, sans-serif">${escapeXml(label)}</text>
@@ -101,10 +104,13 @@ async function processPhoto(fileName, index, existingData) {
     canvasWidth = Math.min(MAX_CANVAS_WIDTH, Math.ceil(canvasHeight * 1.08));
   }
   const adjustedSideBorder = Math.floor((canvasWidth - photoWidth) / 2);
-  const previous = existingData.find(item => item.sourceFile === fileName || Number(item.id) === index + 1) || {};
+  const previous = existingData.find(item => item.sourceFile === fileName)
+    || existingData.find(item => !item.sourceFile && Number(item.id) === index + 1)
+    || {};
   const category = previous.category || "待整理";
   const event = previous.event || "活动待填写";
   const tag = `#${category} · ${event}`;
+  const title = previous.title || `MEMORY ${String(index + 1).padStart(2, "0")}`;
 
   await sharp({
     create: {
@@ -117,7 +123,7 @@ async function processPhoto(fileName, index, existingData) {
     .composite([
       { input: resized.data, left: adjustedSideBorder, top: topBorder },
       {
-        input: captionSvg(canvasWidth, bottomBorder, index + 1, tag),
+        input: captionSvg(canvasWidth, bottomBorder, index + 1, tag, title),
         left: 0,
         top: topBorder + photoHeight
       }
@@ -127,8 +133,9 @@ async function processPhoto(fileName, index, existingData) {
 
   const item = {
     id: index + 1,
-    title: previous.title || `MEMORY ${String(index + 1).padStart(2, "0")}`,
+    title,
     subtitle: previous.subtitle || "这张照片的故事，等你来填写",
+    story: previous.story || "",
     tag,
     category,
     event,
