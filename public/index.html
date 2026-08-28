@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#121214">
+  <title>Graduation Memories · 3D Gallery</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;600&family=Playfair+Display:ital,wght@0,600;1,500&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #121214;
+      --text: #f7f4ee;
+      --muted: rgba(247, 244, 238, .62);
+      --line: rgba(255, 255, 255, .17);
+      --ease: cubic-bezier(.22, .8, .23, 1);
+      --header: 88px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { color-scheme: dark; background: var(--bg); }
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      min-height: 100svh;
+      overflow: hidden;
+      color: var(--text);
+      background: var(--bg);
+      font-family: "DM Sans", "Noto Sans SC", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    button { color: inherit; font: inherit; }
+    button:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
+
+    /* 双层动态背景：新图预加载后再交叉淡入。 */
+    .backdrop { position: fixed; z-index: 0; inset: -80px; overflow: hidden; background: var(--bg); }
+    .backdrop-layer {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      background-position: center;
+      background-size: cover;
+      filter: blur(48px) brightness(.38) saturate(1.16);
+      transform: scale(1.16);
+      transition: opacity 900ms ease;
+      will-change: opacity;
+    }
+    .backdrop-layer.is-visible { opacity: 1; }
+    .backdrop::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 50% 43%, transparent, rgba(9,9,11,.08) 38%, rgba(9,9,11,.74)),
+        linear-gradient(180deg, rgba(8,8,10,.38), transparent 40%, rgba(8,8,10,.52));
+    }
+    .noise {
+      position: fixed;
+      z-index: 1;
+      inset: 0;
+      opacity: .045;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    .topbar {
+      position: fixed;
+      z-index: 100;
+      top: 0;
+      left: 0;
+      display: flex;
+      width: 100%;
+      height: var(--header);
+      align-items: center;
+      justify-content: space-between;
+      padding: max(20px, env(safe-area-inset-top)) clamp(22px, 5vw, 72px) 14px;
+      background: linear-gradient(180deg, rgba(12,12,14,.48), transparent);
+    }
+    .brand { display: inline-flex; align-items: center; gap: 13px; color: inherit; text-decoration: none; }
+    .brand-mark { position: relative; width: 30px; height: 30px; border: 1px solid rgba(255,255,255,.7); border-radius: 50%; }
+    .brand-mark::before, .brand-mark::after { content: ""; position: absolute; background: rgba(255,255,255,.78); }
+    .brand-mark::before { top: 5px; bottom: 5px; left: 50%; width: 1px; }
+    .brand-mark::after { top: 50%; right: 5px; left: 5px; height: 1px; }
+    .brand-text { display: grid; line-height: 1; }
+    .brand-title { font-family: "Playfair Display", serif; font-size: 1rem; letter-spacing: .035em; }
+    .brand-subtitle { margin-top: 5px; color: var(--muted); font-size: .58rem; letter-spacing: .24em; text-transform: uppercase; }
+    .top-actions { display: flex; align-items: center; gap: 8px; }
+    .category-nav {
+      display: flex;
+      gap: 3px;
+      padding: 4px;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 999px;
+      background: rgba(12,12,14,.18);
+      backdrop-filter: blur(16px);
+    }
+    .category-button, .icon-button { border: 0; cursor: pointer; }
+    .category-button {
+      border-radius: 999px;
+      padding: 8px 13px;
+      color: rgba(255,255,255,.58);
+      background: transparent;
+      font-size: .69rem;
+      font-weight: 600;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+      transition: color 220ms ease, background 220ms ease;
+    }
+    .category-button:hover, .category-button.is-active { color: #fff; background: rgba(255,255,255,.13); }
+    .icon-button {
+      display: grid;
+      width: 38px;
+      height: 38px;
+      place-items: center;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 50%;
+      background: rgba(12,12,14,.22);
+      backdrop-filter: blur(16px);
+      transition: border-color 220ms, background 220ms, transform 220ms;
+    }
+    .icon-button:hover { border-color: rgba(255,255,255,.36); background: rgba(255,255,255,.12); transform: translateY(-1px); }
+    .icon-button svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-width: 1.7; }
+
+    .gallery {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      width: 100%;
+      height: 100vh;
+      height: 100svh;
+      grid-template-rows: 1fr auto;
+      align-items: center;
+      padding: calc(var(--header) + 18px) 0 clamp(22px, 4vh, 42px);
+      isolation: isolate;
+    }
+    .stage-wrap { position: relative; display: grid; width: 100%; min-height: 0; place-items: center; }
+    .stage {
+      position: relative;
+      width: 100%;
+      height: min(59vh, 610px);
+      min-height: 360px;
+      perspective: 1500px;
+      perspective-origin: 50% 48%;
+      touch-action: pan-y;
+      user-select: none;
+    }
+
+    .memory-card {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: auto;
+      height: min(57vh, 590px);
+      aspect-ratio: var(--card-ratio, 3 / 4);
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.17);
+      border-radius: clamp(16px, 2vw, 26px);
+      opacity: 0;
+      background: transparent;
+      box-shadow: 0 20px 50px rgba(0,0,0,.25);
+      cursor: pointer;
+      transform: translate3d(-50%, -50%, -420px) scale(.48);
+      transform-style: preserve-3d;
+      transition:
+        transform 760ms var(--ease),
+        opacity 560ms ease,
+        filter 620ms ease,
+        box-shadow 620ms ease,
+        border-color 620ms ease;
+      will-change: transform, opacity, filter;
+    }
+    .memory-card img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+      transform: scale(1.035);
+      transition: transform 950ms var(--ease);
+    }
+    .memory-card::before, .memory-card::after {
+      content: "";
+      position: absolute;
+      z-index: 1;
+      inset: 0;
+      pointer-events: none;
+      transition: opacity 620ms ease;
+    }
+    .memory-card::before { opacity: .38; background: rgba(5,5,7,.38); }
+    .memory-card::after { display: none; }
+    .memory-card.is-active {
+      z-index: 20;
+      opacity: 1;
+      border-color: rgba(255,255,255,.46);
+      filter: none;
+      box-shadow: 0 35px 90px rgba(0,0,0,.56), 0 0 0 1px rgba(255,255,255,.07), 0 0 58px rgba(255,255,255,.09);
+      cursor: default;
+      transform: translate3d(-50%, -50%, 70px) rotateY(0) scale(1);
+    }
+    .memory-card.is-active img { transform: scale(1); }
+    .memory-card.is-active::before { opacity: 0; }
+    .memory-card.is-active::after { opacity: 0; }
+    .memory-card.is-prev, .memory-card.is-next { z-index: 12; opacity: .76; filter: blur(1.1px) saturate(.82); }
+    .memory-card.is-prev { transform: translate3d(calc(-50% - clamp(230px, 31vw, 460px)), -50%, -115px) rotateY(42deg) scale(.79); }
+    .memory-card.is-next { transform: translate3d(calc(-50% + clamp(230px, 31vw, 460px)), -50%, -115px) rotateY(-42deg) scale(.79); }
+    .memory-card.is-far-prev, .memory-card.is-far-next {
+      z-index: 5;
+      opacity: .22;
+      filter: blur(4px) saturate(.55);
+      pointer-events: none;
+    }
+    .memory-card.is-far-prev { transform: translate3d(calc(-50% - clamp(360px, 52vw, 720px)), -50%, -260px) rotateY(54deg) scale(.59); }
+    .memory-card.is-far-next { transform: translate3d(calc(-50% + clamp(360px, 52vw, 720px)), -50%, -260px) rotateY(-54deg) scale(.59); }
+    .memory-card.is-landscape-shape { height: min(45vh, 470px); }
+
+    .card-index {
+      position: absolute;
+      z-index: 2;
+      top: 20px;
+      left: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      opacity: 0;
+      color: rgba(255,255,255,.84);
+      font-size: .66rem;
+      letter-spacing: .16em;
+      transition: opacity 420ms ease 180ms;
+    }
+    .card-index::before { content: ""; width: 24px; height: 1px; background: currentColor; }
+    .memory-card.is-active .card-index { opacity: 1; }
+    .card-copy {
+      position: absolute;
+      z-index: 2;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      padding: 42px clamp(20px, 3vw, 30px) clamp(22px, 3vw, 31px);
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 460ms ease 160ms, transform 560ms var(--ease) 160ms;
+      display: none;
+    }
+    .memory-card.is-active .card-copy { opacity: 1; transform: none; }
+    .card-tag { margin-bottom: 8px; color: rgba(255,255,255,.72); font-size: clamp(.61rem, 1vw, .72rem); font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }
+    .card-title {
+      max-width: 95%;
+      font-family: "Playfair Display", "Noto Sans SC", serif;
+      font-size: clamp(1.7rem, 3.6vw, 2.8rem);
+      line-height: .95;
+      letter-spacing: -.02em;
+      text-wrap: balance;
+    }
+
+    .controls {
+      position: absolute;
+      z-index: 50;
+      top: 50%;
+      left: 50%;
+      display: flex;
+      width: min(96vw, 1160px);
+      justify-content: space-between;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+    }
+    .arrow {
+      display: grid;
+      width: clamp(46px, 5vw, 58px);
+      height: clamp(46px, 5vw, 58px);
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      color: #fff;
+      background: rgba(14,14,17,.25);
+      box-shadow: 0 10px 30px rgba(0,0,0,.15);
+      backdrop-filter: blur(16px);
+      cursor: pointer;
+      pointer-events: auto;
+      transition: background 220ms, border-color 220ms, transform 220ms;
+    }
+    .arrow:hover { border-color: rgba(255,255,255,.5); background: rgba(255,255,255,.15); transform: scale(1.06); }
+    .arrow svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-width: 1.6; }
+
+    .meta-panel {
+      z-index: 30;
+      display: grid;
+      width: min(88vw, 590px);
+      justify-self: center;
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      gap: 28px;
+    }
+    .meta-copy { min-width: 0; }
+    .meta-title {
+      margin-bottom: 4px;
+      overflow: hidden;
+      font-family: "Playfair Display", "Noto Sans SC", serif;
+      font-size: clamp(1.05rem, 2vw, 1.4rem);
+      font-weight: 600;
+      letter-spacing: .015em;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .meta-subtitle {
+      overflow: hidden;
+      color: rgba(255,255,255,.82);
+      font-family: "Playfair Display", "Noto Sans SC", serif;
+      font-size: clamp(.96rem, 1.8vw, 1.18rem);
+      font-style: italic;
+      line-height: 1.3;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .meta-date { margin-top: 5px; color: var(--muted); font-size: .7rem; letter-spacing: .15em; text-transform: uppercase; }
+    .dots {
+      display: flex;
+      max-width: 270px;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 7px;
+      overflow-x: auto;
+      padding: 8px 2px;
+      scrollbar-width: none;
+    }
+    .dots::-webkit-scrollbar { display: none; }
+    .dot {
+      width: 6px;
+      height: 6px;
+      border: 0;
+      border-radius: 999px;
+      background: rgba(255,255,255,.3);
+      cursor: pointer;
+      transition: width 350ms var(--ease), background 350ms;
+    }
+    .dot.is-active { width: 26px; background: #fff; }
+    .progress-label {
+      position: fixed;
+      z-index: 40;
+      right: clamp(20px, 4vw, 56px);
+      bottom: clamp(20px, 4vh, 40px);
+      display: flex;
+      align-items: baseline;
+      gap: 5px;
+      color: rgba(255,255,255,.4);
+      font-size: .64rem;
+      letter-spacing: .08em;
+    }
+    .progress-current { color: #fff; font-family: "Playfair Display", serif; font-size: 1.35rem; }
+    .hint {
+      position: fixed;
+      z-index: 30;
+      bottom: clamp(20px, 4vh, 40px);
+      left: clamp(20px, 4vw, 56px);
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      color: rgba(255,255,255,.42);
+      font-size: .62rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    .hint svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.5; }
+    .load-error {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: min(86vw, 520px);
+      padding: 28px;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 18px;
+      color: rgba(255,255,255,.72);
+      background: rgba(18,18,21,.72);
+      text-align: center;
+      line-height: 1.75;
+      transform: translate(-50%, -50%);
+      backdrop-filter: blur(18px);
+    }
+
+    .about-panel {
+      position: fixed;
+      z-index: 200;
+      top: 0;
+      right: 0;
+      display: flex;
+      width: min(420px, 92vw);
+      height: 100%;
+      flex-direction: column;
+      justify-content: center;
+      padding: 72px clamp(28px, 5vw, 54px);
+      visibility: hidden;
+      opacity: 0;
+      background: rgba(17,17,20,.87);
+      box-shadow: -30px 0 70px rgba(0,0,0,.3);
+      backdrop-filter: blur(28px);
+      transform: translateX(100%);
+      transition: transform 520ms var(--ease), opacity 380ms, visibility 520ms;
+    }
+    .about-panel.is-open { visibility: visible; opacity: 1; transform: none; }
+    .about-close { position: absolute; top: max(24px, env(safe-area-inset-top)); right: 24px; }
+    .about-kicker { margin-bottom: 16px; color: var(--muted); font-size: .68rem; letter-spacing: .22em; text-transform: uppercase; }
+    .about-panel h2 { font-family: "Playfair Display", serif; font-size: clamp(2.2rem, 7vw, 3.8rem); font-weight: 500; line-height: .98; }
+    .about-panel p { margin-top: 24px; color: var(--muted); font-size: .9rem; line-height: 1.8; }
+    .about-rule { width: 46px; height: 1px; margin-top: 32px; background: rgba(255,255,255,.4); }
+
+    /* 照片资料编辑器：资料保存在浏览器 localStorage。 */
+    .editor-overlay {
+      position: fixed;
+      z-index: 180;
+      inset: 0;
+      visibility: hidden;
+      opacity: 0;
+      background: rgba(5,5,7,.54);
+      backdrop-filter: blur(8px);
+      transition: opacity 320ms ease, visibility 320ms;
+    }
+    .editor-overlay.is-open { visibility: visible; opacity: 1; }
+    .editor-panel {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: min(500px, 94vw);
+      height: 100%;
+      overflow-y: auto;
+      padding: 34px clamp(24px, 4vw, 46px) 40px;
+      background: rgba(18,18,21,.94);
+      border-left: 1px solid rgba(255,255,255,.12);
+      box-shadow: -30px 0 80px rgba(0,0,0,.42);
+      transform: translateX(100%);
+      transition: transform 520ms var(--ease);
+    }
+    .editor-overlay.is-open .editor-panel { transform: none; }
+    .editor-header { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+    .editor-kicker { color: var(--muted); font-size: .65rem; letter-spacing: .18em; text-transform: uppercase; }
+    .editor-header h2 { margin-top: 4px; font-family: "Playfair Display", "Noto Sans SC", serif; font-size: 1.8rem; font-weight: 500; }
+    .editor-photo-info {
+      display: grid;
+      grid-template-columns: 78px 1fr;
+      align-items: center;
+      gap: 16px;
+      margin: 26px 0;
+      padding: 12px;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 14px;
+      background: rgba(255,255,255,.04);
+    }
+    .editor-thumb { width: 78px; height: 78px; border-radius: 10px; object-fit: cover; }
+    .editor-position { font-family: "Playfair Display", serif; font-size: 1.25rem; }
+    .editor-filename { margin-top: 5px; overflow: hidden; color: var(--muted); font-size: .68rem; text-overflow: ellipsis; white-space: nowrap; }
+    .memory-form { display: grid; gap: 16px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+    .field { display: grid; gap: 7px; }
+    .field label { color: rgba(255,255,255,.68); font-size: .68rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+    .field input, .field textarea {
+      width: 100%;
+      border: 1px solid rgba(255,255,255,.13);
+      border-radius: 10px;
+      padding: 12px 13px;
+      color: #fff;
+      background: rgba(255,255,255,.055);
+      outline: none;
+      font: inherit;
+      font-size: .86rem;
+      transition: border-color 180ms, background 180ms;
+    }
+    .field input:focus, .field textarea:focus { border-color: rgba(255,255,255,.48); background: rgba(255,255,255,.08); }
+    .field textarea { min-height: 88px; resize: vertical; line-height: 1.55; }
+    .form-help { color: rgba(255,255,255,.4); font-size: .67rem; line-height: 1.55; }
+    .form-actions { display: flex; gap: 10px; margin-top: 5px; }
+    .primary-button, .secondary-button {
+      border-radius: 999px;
+      padding: 11px 18px;
+      font-size: .74rem;
+      font-weight: 600;
+      letter-spacing: .06em;
+      cursor: pointer;
+      transition: transform 180ms, background 180ms, border-color 180ms;
+    }
+    .primary-button { flex: 1; border: 1px solid #fff; color: #111; background: #fff; }
+    .secondary-button { border: 1px solid rgba(255,255,255,.17); color: rgba(255,255,255,.75); background: transparent; }
+    .primary-button:hover, .secondary-button:hover { transform: translateY(-1px); }
+    .backup-tools { margin-top: 28px; padding-top: 22px; border-top: 1px solid rgba(255,255,255,.1); }
+    .backup-title { margin-bottom: 10px; color: var(--muted); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; }
+    .backup-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .save-status { min-height: 20px; margin-top: 12px; color: #a6d9b2; font-size: .7rem; }
+    .visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+    @media (max-width: 820px) {
+      :root { --header: 78px; }
+      .topbar { padding-right: 18px; padding-left: 18px; }
+      .brand-subtitle, .category-nav, .hint { display: none; }
+      .gallery { padding-top: calc(var(--header) + 4px); padding-bottom: 24px; }
+      .stage { height: min(62vh, 570px); min-height: 340px; }
+      .memory-card { width: auto; height: min(55vh, 500px); max-width: 78vw; }
+      .memory-card.is-landscape-shape { height: min(39vh, 350px); max-width: 82vw; }
+      .memory-card.is-prev { transform: translate3d(calc(-50% - 59vw), -50%, -135px) rotateY(46deg) scale(.72); }
+      .memory-card.is-next { transform: translate3d(calc(-50% + 59vw), -50%, -135px) rotateY(-46deg) scale(.72); }
+      .memory-card.is-far-prev, .memory-card.is-far-next { opacity: 0; }
+      .controls { top: auto; bottom: -1px; width: min(92vw, 460px); }
+      .arrow { width: 44px; height: 44px; }
+      .meta-panel { width: min(72vw, 360px); min-height: 50px; grid-template-columns: 1fr; place-items: center; gap: 13px; text-align: center; }
+      .meta-subtitle { white-space: normal; }
+      .dots { max-width: 72vw; justify-content: center; }
+      .progress-label { right: 18px; bottom: 18px; }
+      .editor-panel { width: 100%; max-width: none; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+    @media (max-height: 720px) and (min-width: 821px) {
+      .gallery { padding-top: 80px; padding-bottom: 17px; }
+      .stage { height: 500px; }
+      .memory-card { width: auto; height: 440px; }
+      .memory-card.is-landscape-shape { height: 350px; }
+      .card-title { font-size: 2rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="backdrop" aria-hidden="true">
+    <div class="backdrop-layer is-visible"></div>
+    <div class="backdrop-layer"></div>
+  </div>
+  <div class="noise" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="返回第一张照片">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-text">
+        <span class="brand-title">Graduation Memories</span>
+        <span class="brand-subtitle">Our visual diary</span>
+      </span>
+    </a>
+    <div class="top-actions">
+      <nav id="category-nav" class="category-nav" aria-label="照片年份分类"></nav>
+      <button id="edit-button" class="icon-button" type="button" aria-label="编辑当前照片资料" aria-expanded="false" aria-controls="editor-overlay">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 4.2-1 10.7-10.7a2.1 2.1 0 0 0-3-3L5.2 16 4 20Z"></path><path d="m14.5 6.7 3 3"></path></svg>
+      </button>
+      <button id="about-button" class="icon-button" type="button" aria-label="关于这本画册" aria-expanded="false" aria-controls="about-panel">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v6M12 7.2v.1"></path></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="gallery" aria-label="大学回忆 3D 卡片画册">
+    <section class="stage-wrap" aria-roledescription="轮播图" aria-label="大学照片">
+      <div id="stage" class="stage"></div>
+      <div class="controls" aria-label="轮播控制">
+        <button id="previous" class="arrow" type="button" aria-label="上一张照片">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"></path></svg>
+        </button>
+        <button id="next" class="arrow" type="button" aria-label="下一张照片">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg>
+        </button>
+      </div>
+    </section>
+
+    <div class="meta-panel" aria-live="polite" aria-atomic="true">
+      <div class="meta-copy">
+        <h2 id="active-title" class="meta-title"></h2>
+        <p id="active-subtitle" class="meta-subtitle"></p>
+        <p id="active-date" class="meta-date"></p>
+      </div>
+      <div id="dots" class="dots" aria-label="选择照片"></div>
+    </div>
+  </main>
+
+  <div class="hint" aria-hidden="true">
+    <svg viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="5"></rect><path d="M12 7v4"></path></svg>
+    Scroll or use arrow keys
+  </div>
+  <div class="progress-label" aria-hidden="true">
+    <span id="progress-current" class="progress-current">01</span><span>/</span><span id="progress-total">01</span>
+  </div>
+
+  <aside id="about-panel" class="about-panel" aria-hidden="true" aria-labelledby="about-title">
+    <button id="about-close" class="icon-button about-close" type="button" aria-label="关闭关于面板">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+    </button>
+    <p class="about-kicker">A time capsule</p>
+    <h2 id="about-title">The days<br>we keep.</h2>
+    <p>这不是故事的结尾，而是把一起走过的大学时光，收藏成一本可以随时翻开的画册。</p>
+    <div class="about-rule" aria-hidden="true"></div>
+  </aside>
+
+  <div id="editor-overlay" class="editor-overlay" aria-hidden="true">
+    <section class="editor-panel" role="dialog" aria-modal="true" aria-labelledby="editor-title">
+      <div class="editor-header">
+        <div>
+          <p class="editor-kicker">Photo details</p>
+          <h2 id="editor-title">整理这张回忆</h2>
+        </div>
+        <button id="editor-close" class="icon-button" type="button" aria-label="关闭编辑器">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+        </button>
+      </div>
+
+      <div class="editor-photo-info">
+        <img id="editor-thumb" class="editor-thumb" src="" alt="当前编辑的照片">
+        <div>
+          <p id="editor-position" class="editor-position"></p>
+          <p id="editor-filename" class="editor-filename"></p>
+        </div>
+      </div>
+
+      <form id="memory-form" class="memory-form">
+        <div class="field">
+          <label for="memory-title">画面标题</label>
+          <input id="memory-title" name="title" type="text" maxlength="60" placeholder="例如：迎新日 / THE BEGINNING">
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label for="memory-category">年份 / 分类</label>
+            <input id="memory-category" name="category" type="text" maxlength="30" placeholder="例如：Year 1">
+          </div>
+          <div class="field">
+            <label for="memory-event">活动名称</label>
+            <input id="memory-event" name="event" type="text" maxlength="40" placeholder="例如：迎新晚会">
+          </div>
+        </div>
+        <div class="field">
+          <label for="memory-date">日期</label>
+          <input id="memory-date" name="date" type="text" maxlength="30" placeholder="例如：2023.09.12 或 2023.09">
+        </div>
+        <div class="field">
+          <label for="memory-subtitle">故事 / 备注</label>
+          <textarea id="memory-subtitle" name="subtitle" maxlength="180" placeholder="写下当时发生的事、同行的人或想记住的一句话……"></textarea>
+        </div>
+        <p class="form-help">资料只会保存在当前浏览器。整理完成后建议点击“导出备份”，下载一份 JSON 文件。</p>
+        <div class="form-actions">
+          <button id="reset-current" class="secondary-button" type="button">清空当前</button>
+          <button class="primary-button" type="submit">保存这张照片</button>
+        </div>
+      </form>
+
+      <div class="backup-tools">
+        <p class="backup-title">资料备份</p>
+        <div class="backup-actions">
+          <button id="export-data" class="secondary-button" type="button">导出 JSON</button>
+          <button id="import-data" class="secondary-button" type="button">导入 JSON</button>
+          <input id="import-file" class="visually-hidden" type="file" accept="application/json,.json">
+        </div>
+        <p id="save-status" class="save-status" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // 图片、尺寸和默认资料全部由 npm run build 生成的 data.json 提供。
+    const STORAGE_KEY = "graduation-memories-metadata-v1";
+
+    function makeDefaultMemory(image, index) {
+      return {
+        id: index + 1,
+        title: `MEMORY ${String(index + 1).padStart(2, "0")}`,
+        subtitle: "这张照片的故事，等你来填写",
+        tag: "#待整理 · 活动待填写",
+        category: "待整理",
+        event: "活动待填写",
+        date: "日期待填写",
+        image
+      };
+    }
+
+    function normaliseMemory(base, saved = {}) {
+      const category = String(saved.category || base.category).trim() || "待整理";
+      const event = String(saved.event || base.event).trim() || "活动待填写";
+      return {
+        ...base,
+        title: String(saved.title || base.title).trim(),
+        subtitle: String(saved.subtitle || base.subtitle).trim(),
+        category,
+        event,
+        date: String(saved.date || base.date).trim(),
+        tag: `#${category} · ${event}`
+      };
+    }
+
+    async function fetchBaseMemories() {
+      const response = await fetch("./data.json", { cache: "no-store" });
+      if (!response.ok) throw new Error(`无法加载 data.json（HTTP ${response.status}）`);
+      const data = await response.json();
+      if (!Array.isArray(data) || !data.length) throw new Error("data.json 中没有照片资料");
+      return data.map((item, index) => normaliseMemory({
+        ...makeDefaultMemory(item.image, index),
+        ...item,
+        id: Number(item.id) || index + 1
+      }, item));
+    }
+
+    function loadMemories(defaults) {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+        if (!Array.isArray(saved)) return defaults;
+        return defaults.map(base => {
+          const match = saved.find(item => Number(item.id) === base.id || item.image === base.image);
+          return normaliseMemory(base, match);
+        });
+      } catch (error) {
+        console.warn("无法读取已保存的照片资料：", error);
+        return defaults;
+      }
+    }
+
+    let baseMemories = [];
+    let memories = [];
+
+    const stage = document.getElementById("stage");
+    const dotsContainer = document.getElementById("dots");
+    const previousButton = document.getElementById("previous");
+    const nextButton = document.getElementById("next");
+    const activeTitle = document.getElementById("active-title");
+    const activeSubtitle = document.getElementById("active-subtitle");
+    const activeDate = document.getElementById("active-date");
+    const progressCurrent = document.getElementById("progress-current");
+    const progressTotal = document.getElementById("progress-total");
+    const categoryNav = document.getElementById("category-nav");
+    const backgroundLayers = [...document.querySelectorAll(".backdrop-layer")];
+    const aboutPanel = document.getElementById("about-panel");
+    const aboutButton = document.getElementById("about-button");
+    const aboutClose = document.getElementById("about-close");
+    const editorOverlay = document.getElementById("editor-overlay");
+    const editorPanel = editorOverlay.querySelector(".editor-panel");
+    const editButton = document.getElementById("edit-button");
+    const editorClose = document.getElementById("editor-close");
+    const memoryForm = document.getElementById("memory-form");
+    const editorThumb = document.getElementById("editor-thumb");
+    const editorPosition = document.getElementById("editor-position");
+    const editorFilename = document.getElementById("editor-filename");
+    const titleInput = document.getElementById("memory-title");
+    const categoryInput = document.getElementById("memory-category");
+    const eventInput = document.getElementById("memory-event");
+    const dateInput = document.getElementById("memory-date");
+    const subtitleInput = document.getElementById("memory-subtitle");
+    const resetCurrentButton = document.getElementById("reset-current");
+    const exportButton = document.getElementById("export-data");
+    const importButton = document.getElementById("import-data");
+    const importFile = document.getElementById("import-file");
+    const saveStatus = document.getElementById("save-status");
+
+    let activeIndex = 0;
+    let visibleBackground = 0;
+    let wheelLocked = false;
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let cards = [];
+    let dots = [];
+
+    const padNumber = number => String(number).padStart(2, "0");
+
+    function circularOffset(index, current, length) {
+      let offset = index - current;
+      if (offset > length / 2) offset -= length;
+      if (offset < -length / 2) offset += length;
+      return offset;
+    }
+
+    function makeCard(memory, index) {
+      const card = document.createElement("article");
+      card.className = `memory-card is-${memory.aspectRatio || "portrait"}-shape`;
+      if (memory.width && memory.height) {
+        card.style.setProperty("--card-ratio", `${memory.width} / ${memory.height}`);
+      }
+      card.tabIndex = 0;
+      card.setAttribute("role", "group");
+      card.setAttribute("aria-roledescription", "slide");
+      card.setAttribute("aria-label", `${index + 1} / ${memories.length}：${memory.title}`);
+
+      const image = document.createElement("img");
+      image.src = memory.image;
+      image.alt = memory.title;
+      image.draggable = false;
+      image.decoding = "async";
+      image.loading = "eager";
+
+      const cardIndex = document.createElement("span");
+      cardIndex.className = "card-index";
+      cardIndex.textContent = padNumber(index + 1);
+
+      const copy = document.createElement("div");
+      copy.className = "card-copy";
+      const tag = document.createElement("p");
+      tag.className = "card-tag";
+      tag.textContent = memory.tag;
+      const title = document.createElement("h2");
+      title.className = "card-title";
+      title.textContent = memory.title;
+      copy.append(tag, title);
+      card.append(image, cardIndex, copy);
+
+      card.addEventListener("click", () => activeIndex !== index && goTo(index));
+      card.addEventListener("keydown", event => {
+        if ((event.key === "Enter" || event.key === " ") && activeIndex !== index) {
+          event.preventDefault();
+          goTo(index);
+        }
+      });
+      return card;
+    }
+
+    function makeDot(memory, index) {
+      const dot = document.createElement("button");
+      dot.type = "button";
+      dot.className = "dot";
+      dot.setAttribute("aria-label", `查看 ${memory.title}`);
+      dot.addEventListener("click", () => goTo(index));
+      return dot;
+    }
+
+    function buildGallery() {
+      const cardFragment = document.createDocumentFragment();
+      const dotFragment = document.createDocumentFragment();
+      memories.forEach((memory, index) => {
+        cardFragment.appendChild(makeCard(memory, index));
+        dotFragment.appendChild(makeDot(memory, index));
+      });
+      stage.appendChild(cardFragment);
+      dotsContainer.appendChild(dotFragment);
+      cards = [...stage.querySelectorAll(".memory-card")];
+      dots = [...dotsContainer.querySelectorAll(".dot")];
+      progressTotal.textContent = padNumber(memories.length);
+      buildCategories();
+      backgroundLayers[0].style.backgroundImage = `url("${memories[0].image}")`;
+      updateGallery(false);
+      preloadNearbyImages();
+    }
+
+    function buildCategories() {
+      categoryNav.replaceChildren();
+      [...new Set(memories.map(memory => memory.category))].forEach(category => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "category-button";
+        button.textContent = category;
+        button.dataset.category = category;
+        button.addEventListener("click", () => {
+          const index = memories.findIndex(memory => memory.category === category);
+          if (index >= 0) goTo(index);
+        });
+        categoryNav.appendChild(button);
+      });
+    }
+
+    function updateBackground(image) {
+      const nextLayer = 1 - visibleBackground;
+      const preload = new Image();
+      preload.onload = () => {
+        backgroundLayers[nextLayer].style.backgroundImage = `url("${image}")`;
+        requestAnimationFrame(() => {
+          backgroundLayers[nextLayer].classList.add("is-visible");
+          backgroundLayers[visibleBackground].classList.remove("is-visible");
+          visibleBackground = nextLayer;
+        });
+      };
+      preload.src = image;
+    }
+
+    function updateGallery(animateBackground = true) {
+      cards.forEach((card, index) => {
+        const offset = circularOffset(index, activeIndex, memories.length);
+        card.className = `memory-card is-${memories[index].aspectRatio || "portrait"}-shape`;
+        card.removeAttribute("aria-current");
+        if (offset === 0) {
+          card.classList.add("is-active");
+          card.setAttribute("aria-current", "true");
+        } else if (offset === -1) card.classList.add("is-prev");
+        else if (offset === 1) card.classList.add("is-next");
+        else if (offset === -2) card.classList.add("is-far-prev");
+        else if (offset === 2) card.classList.add("is-far-next");
+      });
+
+      dots.forEach((dot, index) => {
+        const selected = index === activeIndex;
+        dot.classList.toggle("is-active", selected);
+        dot.setAttribute("aria-current", selected ? "true" : "false");
+      });
+      dots[activeIndex]?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+
+      const memory = memories[activeIndex];
+      activeTitle.textContent = memory.title;
+      activeSubtitle.textContent = memory.subtitle;
+      activeDate.textContent = `${memory.date} · ${memory.tag.replace("#", "")}`;
+      progressCurrent.textContent = padNumber(activeIndex + 1);
+      document.querySelectorAll(".category-button").forEach(button => {
+        button.classList.toggle("is-active", button.dataset.category === memory.category);
+      });
+      if (animateBackground) updateBackground(memory.image);
+      preloadNearbyImages();
+    }
+
+    function preloadNearbyImages() {
+      [-2, -1, 1, 2].forEach(step => {
+        const index = (activeIndex + step + memories.length) % memories.length;
+        const image = new Image();
+        image.src = memories[index].image;
+      });
+    }
+
+    function goTo(index) {
+      activeIndex = (index + memories.length) % memories.length;
+      updateGallery();
+    }
+
+    const showPrevious = () => goTo(activeIndex - 1);
+    const showNext = () => goTo(activeIndex + 1);
+    previousButton.addEventListener("click", showPrevious);
+    nextButton.addEventListener("click", showNext);
+    document.querySelector(".brand").addEventListener("click", event => {
+      event.preventDefault();
+      goTo(0);
+    });
+
+    window.addEventListener("keydown", event => {
+      if (editorOverlay.classList.contains("is-open")) {
+        if (event.key === "Escape") closeEditor();
+        return;
+      }
+      if (aboutPanel.classList.contains("is-open")) {
+        if (event.key === "Escape") closeAbout();
+        return;
+      }
+      if (event.key === "ArrowLeft") showPrevious();
+      if (event.key === "ArrowRight") showNext();
+    });
+
+    window.addEventListener("wheel", event => {
+      if (wheelLocked || aboutPanel.classList.contains("is-open") || editorOverlay.classList.contains("is-open")) return;
+      const movement = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+      if (Math.abs(movement) < 8) return;
+      wheelLocked = true;
+      movement > 0 ? showNext() : showPrevious();
+      window.setTimeout(() => { wheelLocked = false; }, 620);
+    }, { passive: true });
+
+    stage.addEventListener("touchstart", event => {
+      touchStartX = event.changedTouches[0].clientX;
+      touchStartY = event.changedTouches[0].clientY;
+    }, { passive: true });
+    stage.addEventListener("touchend", event => {
+      const deltaX = event.changedTouches[0].clientX - touchStartX;
+      const deltaY = event.changedTouches[0].clientY - touchStartY;
+      if (Math.abs(deltaX) > 48 && Math.abs(deltaX) > Math.abs(deltaY)) {
+        deltaX < 0 ? showNext() : showPrevious();
+      }
+    }, { passive: true });
+
+    function saveMemories() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(memories));
+        return true;
+      } catch (error) {
+        console.error("无法保存照片资料：", error);
+        saveStatus.textContent = "保存失败，请检查浏览器是否允许本地存储。";
+        return false;
+      }
+    }
+
+    function refreshCardContent(index) {
+      const memory = memories[index];
+      const card = cards[index];
+      if (!card) return;
+      card.setAttribute("aria-label", `${index + 1} / ${memories.length}：${memory.title}`);
+      card.querySelector("img").alt = memory.title;
+      card.querySelector(".card-tag").textContent = memory.tag;
+      card.querySelector(".card-title").textContent = memory.title;
+      dots[index]?.setAttribute("aria-label", `查看 ${memory.title}`);
+    }
+
+    function refreshAllContent() {
+      memories.forEach((memory, index) => refreshCardContent(index));
+      buildCategories();
+      updateGallery(false);
+    }
+
+    function fillEditor() {
+      const memory = memories[activeIndex];
+      editorThumb.src = memory.image;
+      editorPosition.textContent = `照片 ${padNumber(activeIndex + 1)} / ${padNumber(memories.length)}`;
+      editorFilename.textContent = decodeURIComponent(memory.image.replace(/^\.\//, ""));
+      editorFilename.title = editorFilename.textContent;
+      titleInput.value = memory.title;
+      categoryInput.value = memory.category === "待整理" ? "" : memory.category;
+      eventInput.value = memory.event === "活动待填写" ? "" : memory.event;
+      dateInput.value = memory.date === "日期待填写" ? "" : memory.date;
+      subtitleInput.value = memory.subtitle === "这张照片的故事，等你来填写" ? "" : memory.subtitle;
+      saveStatus.textContent = "";
+    }
+
+    function openEditor() {
+      closeAbout(false);
+      fillEditor();
+      editorOverlay.classList.add("is-open");
+      editorOverlay.setAttribute("aria-hidden", "false");
+      editButton.setAttribute("aria-expanded", "true");
+      window.setTimeout(() => titleInput.focus(), 180);
+    }
+
+    function closeEditor(returnFocus = true) {
+      editorOverlay.classList.remove("is-open");
+      editorOverlay.setAttribute("aria-hidden", "true");
+      editButton.setAttribute("aria-expanded", "false");
+      if (returnFocus) editButton.focus();
+    }
+
+    memoryForm.addEventListener("submit", event => {
+      event.preventDefault();
+      const memory = memories[activeIndex];
+      const category = categoryInput.value.trim() || "待整理";
+      const activity = eventInput.value.trim() || "活动待填写";
+      memory.title = titleInput.value.trim() || `MEMORY ${padNumber(activeIndex + 1)}`;
+      memory.category = category;
+      memory.event = activity;
+      memory.date = dateInput.value.trim() || "日期待填写";
+      memory.subtitle = subtitleInput.value.trim() || "这张照片的故事，等你来填写";
+      memory.tag = `#${category} · ${activity}`;
+
+      if (saveMemories()) {
+        refreshAllContent();
+        fillEditor();
+        saveStatus.textContent = `照片 ${padNumber(activeIndex + 1)} 已保存到当前浏览器。`;
+      }
+    });
+
+    resetCurrentButton.addEventListener("click", () => {
+      if (!window.confirm("确定清空当前照片已经填写的资料吗？")) return;
+      memories[activeIndex] = normaliseMemory(baseMemories[activeIndex]);
+      saveMemories();
+      refreshAllContent();
+      fillEditor();
+      saveStatus.textContent = "当前照片资料已清空。";
+    });
+
+    exportButton.addEventListener("click", () => {
+      const data = JSON.stringify(memories, null, 2);
+      const blob = new Blob([data], { type: "application/json;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `graduation-memories-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      saveStatus.textContent = "资料备份已导出。";
+    });
+
+    importButton.addEventListener("click", () => importFile.click());
+    importFile.addEventListener("change", async () => {
+      const file = importFile.files?.[0];
+      if (!file) return;
+      try {
+        const imported = JSON.parse(await file.text());
+        if (!Array.isArray(imported)) throw new Error("备份格式不正确");
+        memories = baseMemories.map(base => {
+          const match = imported.find(item => Number(item.id) === base.id || item.image === base.image);
+          return normaliseMemory(base, match);
+        });
+        saveMemories();
+        refreshAllContent();
+        fillEditor();
+        saveStatus.textContent = `已导入 ${imported.length} 条照片资料。`;
+      } catch (error) {
+        saveStatus.textContent = `导入失败：${error.message}`;
+      } finally {
+        importFile.value = "";
+      }
+    });
+
+    editButton.addEventListener("click", openEditor);
+    editorClose.addEventListener("click", () => closeEditor());
+    editorOverlay.addEventListener("click", event => {
+      if (event.target === editorOverlay) closeEditor();
+    });
+
+    function openAbout() {
+      closeEditor(false);
+      aboutPanel.classList.add("is-open");
+      aboutPanel.setAttribute("aria-hidden", "false");
+      aboutButton.setAttribute("aria-expanded", "true");
+      aboutClose.focus();
+    }
+    function closeAbout(returnFocus = true) {
+      aboutPanel.classList.remove("is-open");
+      aboutPanel.setAttribute("aria-hidden", "true");
+      aboutButton.setAttribute("aria-expanded", "false");
+      if (returnFocus) aboutButton.focus();
+    }
+    aboutButton.addEventListener("click", openAbout);
+    aboutClose.addEventListener("click", closeAbout);
+
+    async function initialiseGallery() {
+      try {
+        baseMemories = await fetchBaseMemories();
+        memories = loadMemories(baseMemories);
+        const requestedPhoto = Number(new URLSearchParams(window.location.search).get("photo"));
+        if (Number.isInteger(requestedPhoto) && requestedPhoto >= 1 && requestedPhoto <= memories.length) {
+          activeIndex = requestedPhoto - 1;
+        }
+        buildGallery();
+        if (window.location.hash === "#edit") openEditor();
+      } catch (error) {
+        console.error(error);
+        const message = document.createElement("p");
+        message.className = "load-error";
+        message.textContent = `相册资料加载失败：${error.message}。请先运行 npm run build，并通过本地服务器打开 public/。`;
+        stage.replaceChildren(message);
+        document.querySelector(".controls").hidden = true;
+      }
+    }
+
+    initialiseGallery();
+  </script>
+</body>
+</html>

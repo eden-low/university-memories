@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Original full-size photos stay local
+raw_images/
+
+# Local/editor files
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/
+
+# Temporary previews
+codex-preview*.png
+
+# Keep the generated deployable site in Git
+!public/
+!public/**
