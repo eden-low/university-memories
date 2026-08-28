@@ -8,14 +8,27 @@ const projectRoot = path.resolve(scriptDirectory, "..");
 const rawDirectory = path.join(projectRoot, "raw_images");
 const publicDirectory = path.join(projectRoot, "public");
 const outputDirectory = path.join(publicDirectory, "images");
+const universeTextureDirectory = path.join(outputDirectory, "universe");
 const dataPath = path.join(publicDirectory, "data.json");
 const sourceHtmlPath = path.join(projectRoot, "index.html");
 const publicHtmlPath = path.join(publicDirectory, "index.html");
+const sourceUniverseHtmlPath = path.join(projectRoot, "universe.html");
+const publicUniverseHtmlPath = path.join(publicDirectory, "universe.html");
+const sourceUniverseScriptPath = path.join(projectRoot, "assets", "js", "universe.js");
+const sourceUniverseStylePath = path.join(projectRoot, "assets", "css", "universe.css");
+const publicUniverseScriptPath = path.join(publicDirectory, "assets", "js", "universe.js");
+const publicUniverseStylePath = path.join(publicDirectory, "assets", "css", "universe.css");
+const sourceThreeModulePath = path.join(projectRoot, "node_modules", "three", "build", "three.module.js");
+const publicThreeModulePath = path.join(publicDirectory, "vendor", "three.module.js");
+const sourceThreeCorePath = path.join(projectRoot, "node_modules", "three", "build", "three.core.js");
+const publicThreeCorePath = path.join(publicDirectory, "vendor", "three.core.js");
 
 const MAX_CANVAS_WIDTH = 1920;
 // 1500px leaves enough room for adaptive side/bottom borders inside 1920px.
 const MAX_PHOTO_WIDTH = 1500;
 const WEBP_QUALITY = 80;
+const UNIVERSE_TEXTURE_WIDTH = 384;
+const UNIVERSE_TEXTURE_QUALITY = 72;
 const supportedExtensions = new Set([".jpg", ".jpeg", ".png", ".webp", ".tif", ".tiff"]);
 
 const clamp = (value, minimum, maximum) => Math.min(Math.max(value, minimum), maximum);
@@ -70,9 +83,15 @@ async function readExistingData() {
 
 async function removeStaleOutputs() {
   const existingFiles = await readdir(outputDirectory, { withFileTypes: true });
-  await Promise.all(existingFiles
+  const universeFiles = await readdir(universeTextureDirectory, { withFileTypes: true }).catch(() => []);
+  await Promise.all([
+    ...existingFiles
     .filter(entry => entry.isFile() && /^memory-\d+\.webp$/i.test(entry.name))
-    .map(entry => unlink(path.join(outputDirectory, entry.name))));
+    .map(entry => unlink(path.join(outputDirectory, entry.name))),
+    ...universeFiles
+      .filter(entry => entry.isFile() && /^memory-\d+\.webp$/i.test(entry.name))
+      .map(entry => unlink(path.join(universeTextureDirectory, entry.name)))
+  ]);
 }
 
 async function processPhoto(fileName, index, existingData) {
@@ -131,6 +150,11 @@ async function processPhoto(fileName, index, existingData) {
     .webp({ quality: WEBP_QUALITY, effort: 6 })
     .toFile(outputPath);
 
+  await sharp(outputPath)
+    .resize({ width: UNIVERSE_TEXTURE_WIDTH, withoutEnlargement: true })
+    .webp({ quality: UNIVERSE_TEXTURE_QUALITY, effort: 5 })
+    .toFile(path.join(universeTextureDirectory, outputName));
+
   const item = {
     id: index + 1,
     title,
@@ -157,7 +181,16 @@ async function processPhoto(fileName, index, existingData) {
 async function main() {
   await access(rawDirectory);
   await access(sourceHtmlPath);
+  await access(sourceUniverseHtmlPath);
+  await access(sourceUniverseScriptPath);
+  await access(sourceUniverseStylePath);
+  await access(sourceThreeModulePath);
+  await access(sourceThreeCorePath);
   await mkdir(outputDirectory, { recursive: true });
+  await mkdir(universeTextureDirectory, { recursive: true });
+  await mkdir(path.dirname(publicUniverseScriptPath), { recursive: true });
+  await mkdir(path.dirname(publicUniverseStylePath), { recursive: true });
+  await mkdir(path.dirname(publicThreeModulePath), { recursive: true });
 
   const sourceFiles = (await readdir(rawDirectory, { withFileTypes: true }))
     .filter(entry => entry.isFile() && supportedExtensions.has(path.extname(entry.name).toLowerCase()))
@@ -179,9 +212,15 @@ async function main() {
 
   await writeFile(dataPath, `${JSON.stringify(data, null, 2)}\n`, "utf8");
   await copyFile(sourceHtmlPath, publicHtmlPath);
+  await copyFile(sourceUniverseHtmlPath, publicUniverseHtmlPath);
+  await copyFile(sourceUniverseScriptPath, publicUniverseScriptPath);
+  await copyFile(sourceUniverseStylePath, publicUniverseStylePath);
+  await copyFile(sourceThreeModulePath, publicThreeModulePath);
+  await copyFile(sourceThreeCorePath, publicThreeCorePath);
   console.log(`\n完成：${data.length} 张 WebP 已输出到 public/images/`);
+  console.log(`宇宙纹理：${data.length} 张 ${UNIVERSE_TEXTURE_WIDTH}px WebP 已输出到 public/images/universe/`);
   console.log("资料索引：public/data.json");
-  console.log("网站入口：public/index.html");
+  console.log("网站入口：public/index.html · public/universe.html");
 }
 
 main().catch(error => {

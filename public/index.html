@@ -824,6 +824,22 @@
       transition: color 180ms ease, border-color 180ms ease;
     }
     .about-replay:hover, .about-replay:focus-visible { color: #fff; border-color: rgba(255,255,255,.7); }
+    .universe-entry {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      margin-top: 26px;
+      border-top: 1px solid rgba(255,255,255,.1);
+      border-bottom: 1px solid rgba(255,255,255,.1);
+      padding: 17px 0;
+      color: rgba(255,255,255,.72);
+      text-decoration: none;
+      transition: color 180ms ease, border-color 180ms ease;
+    }
+    .universe-entry span { font-family: "Playfair Display", "Noto Sans SC", serif; font-size: 1rem; }
+    .universe-entry small { color: rgba(255,255,255,.34); font-size: .52rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }
+    .universe-entry:hover, .universe-entry:focus-visible { color: #fff; border-color: rgba(255,255,255,.3); }
 
     /* Phase 2 opening: optional, quiet and separate from page loading. */
     .intro-overlay {
@@ -1256,6 +1272,10 @@
     <h2 id="about-title">The days<br>we keep.</h2>
     <p>这不是故事的结尾，而是把一起走过的大学时光，收藏成一本可以随时翻开的画册。</p>
     <div class="about-rule" aria-hidden="true"></div>
+    <a id="universe-link" class="universe-entry" href="./universe.html">
+      <span>回忆宇宙</span>
+      <small>Explore in 3D →</small>
+    </a>
     <button id="about-replay" class="about-replay" type="button">Replay introduction</button>
   </aside>
 
@@ -1553,6 +1573,7 @@
     const aboutButton = document.getElementById("about-button");
     const aboutClose = document.getElementById("about-close");
     const aboutReplay = document.getElementById("about-replay");
+    const universeLink = document.getElementById("universe-link");
     const introOverlay = document.getElementById("intro-overlay");
     const introEnter = document.getElementById("intro-enter");
     const introSkip = document.getElementById("intro-skip");
@@ -2289,6 +2310,7 @@
       });
       if (animateBackground) updateBackground(memory.image);
       updateMemoryColor(memory.image);
+      syncUniverseLink();
       preloadNearbyImages();
     }
 
@@ -2316,6 +2338,14 @@
       const url = new URL(window.location.href);
       url.searchParams.set("photo", String(originalIndex + 1));
       window.history.replaceState({ photo: originalIndex + 1 }, "", `${url.pathname}${url.search}${url.hash}`);
+      syncUniverseLink();
+    }
+
+    function syncUniverseLink() {
+      const memory = memories[activeIndex];
+      if (!memory) return;
+      const originalIndex = allMemories.findIndex(item => item.id === memory.id || item.image === memory.image);
+      universeLink.href = `./universe.html?photo=${originalIndex >= 0 ? originalIndex + 1 : activeIndex + 1}`;
     }
 
     const showPrevious = () => goTo(activeIndex - 1);
@@ -2504,6 +2534,14 @@
       detailOverlay.setAttribute("aria-hidden", "true");
       document.body.removeAttribute("data-detail-open");
       if (wasOpen && memories.length) updateGallery();
+      const returnToUniverse = wasOpen && returnFocus && new URLSearchParams(window.location.search).get("from") === "universe";
+      if (returnToUniverse) {
+        const memory = memories[activeIndex];
+        const originalIndex = allMemories.findIndex(item => item.id === memory?.id || item.image === memory?.image);
+        const photo = originalIndex >= 0 ? originalIndex + 1 : activeIndex + 1;
+        window.setTimeout(() => window.location.assign(`./universe.html?photo=${photo}&restore=1`), reducedMotion.matches ? 0 : 320);
+        return;
+      }
       if (returnFocus) cards[activeIndex]?.focus({ preventScroll: true });
     }
 
@@ -3106,8 +3144,10 @@
 
     async function initialiseApp() {
       await initialiseGallery();
-      if (memories.length && !hasCompletedIntro()) showIntro();
+      const detailRequested = new URLSearchParams(window.location.search).get("detail") === "1";
+      if (memories.length && !detailRequested && !hasCompletedIntro()) showIntro();
       await initialiseLocalManager();
+      if (memories.length && detailRequested) openDetail();
     }
 
     initialiseApp();

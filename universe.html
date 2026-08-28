@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#09080a">
+  <title>Memory Universe · Graduation Memories</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;600&family=Playfair+Display:ital,wght@0,600;1,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/css/universe.css">
+</head>
+<body class="is-loading">
+  <main id="universe-app" class="universe-app" aria-label="回忆宇宙 3D 照片浏览器">
+    <div id="universe-canvas" class="universe-canvas"></div>
+    <div class="universe-vignette" aria-hidden="true"></div>
+    <div class="universe-grain" aria-hidden="true"></div>
+
+    <header class="universe-header">
+      <a id="archive-link" class="archive-link" href="./index.html" aria-label="返回回忆档案">
+        <span aria-hidden="true">←</span>
+        <span>Archive</span>
+      </a>
+      <div class="universe-identity" aria-hidden="true">
+        <span>Memory Universe</span>
+        <small>回忆宇宙</small>
+      </div>
+    </header>
+
+    <section id="loading-state" class="loading-state" role="status" aria-live="polite">
+      <p>Memory Universe</p>
+      <span id="loading-copy">Loading memories · 0 / 28</span>
+    </section>
+
+    <p id="target-label" class="target-label" aria-live="polite"></p>
+
+    <section id="selection-context" class="selection-context" aria-hidden="true" aria-labelledby="selection-title">
+      <p id="selection-number" class="selection-number"></p>
+      <h1 id="selection-title" class="selection-title"></h1>
+      <div class="selection-actions">
+        <button id="view-memory" class="view-memory" type="button">View memory</button>
+        <button id="release-memory" class="release-memory" type="button">Back to universe</button>
+      </div>
+    </section>
+
+    <div id="universe-help" class="universe-help" aria-hidden="true">
+      <span>Drag to rotate</span>
+      <span>Click a memory to grab it</span>
+    </div>
+
+    <section id="universe-fallback" class="universe-fallback" hidden>
+      <p class="fallback-kicker">Memory Universe</p>
+      <h1>3D Memory Universe is unavailable on this device.</h1>
+      <p>The photographic archive is still available in its original form.</p>
+      <a href="./index.html">Return to archive</a>
+    </section>
+
+    <p id="universe-live" class="visually-hidden" aria-live="polite"></p>
+  </main>
+
+  <noscript>
+    <div class="noscript-fallback">JavaScript is required for Memory Universe. <a href="./index.html">Return to archive</a>.</div>
+  </noscript>
+
+  <script>
+    window.__showUniverseFallback = () => {
+      if (document.body.dataset.universeReady === "true") return;
+      document.body.classList.remove("is-loading");
+      document.getElementById("loading-state").hidden = true;
+      document.getElementById("universe-fallback").hidden = false;
+    };
+    window.__universeFallbackTimer = window.setTimeout(window.__showUniverseFallback, 12000);
+    window.addEventListener("unhandledrejection", event => {
+      console.error("Memory Universe failed to initialise.", event.reason);
+      window.__showUniverseFallback();
+    }, { once: true });
+  </script>
+  <script type="module" src="./assets/js/universe.js"></script>
+</body>
+</html>
