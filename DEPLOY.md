@@ -7,6 +7,10 @@
 3. 运行 `npm run build`。脚本会识别横竖比例、生成自适应宝丽来边框、转为 WebP，并更新 `public/data.json`。
 4. 运行 `npm run serve`，然后打开 <http://localhost:8000> 预览。
 
+## 添加背景音乐
+
+将你自己的 MP3 音乐命名为 `bgm.mp3`，放到 `public/audio/bgm.mp3`。播放器默认音量为 35%、循环播放，并会在用户首次点击照片或翻页按钮时尝试淡入。音乐文件需要一并提交到 GitHub 才能在 Pages 上播放；请确认你拥有该音乐的公开使用权。
+
 `public/` 是完整的部署成品，需要提交到 Git。新增或替换原图后，再次运行 `npm run build` 即可更新。
 
 ## 推送和开启 GitHub Pages（4 步）

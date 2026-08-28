@@ -124,6 +124,55 @@
     .icon-button:hover { border-color: rgba(255,255,255,.36); background: rgba(255,255,255,.12); transform: translateY(-1px); }
     .icon-button svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-width: 1.7; }
 
+    .bgm-control {
+      display: inline-flex;
+      height: 38px;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 999px;
+      padding: 0 13px 0 12px;
+      color: rgba(255,255,255,.72);
+      background: rgba(12,12,14,.22);
+      backdrop-filter: blur(16px);
+      cursor: pointer;
+      transition: border-color 220ms, background 220ms, color 220ms, transform 220ms;
+    }
+    .bgm-control:hover { border-color: rgba(255,255,255,.36); background: rgba(255,255,255,.1); transform: translateY(-1px); }
+    .bgm-control.is-playing { border-color: rgba(255,255,255,.3); color: #fff; background: rgba(255,255,255,.1); }
+    .bgm-control.is-unavailable { opacity: .55; }
+    .bgm-visualizer { display: flex; width: 17px; height: 15px; align-items: center; justify-content: center; gap: 2px; }
+    .bgm-bar {
+      width: 2px;
+      height: 5px;
+      border-radius: 2px;
+      opacity: .48;
+      background: currentColor;
+      transform-origin: 50% 100%;
+      transition: height 260ms var(--ease), opacity 260ms;
+    }
+    .bgm-bar:nth-child(2) { height: 9px; }
+    .bgm-bar:nth-child(3) { height: 6px; }
+    .bgm-bar:nth-child(4) { height: 11px; }
+    .is-playing .bgm-bar { opacity: .95; animation: bgm-wave .72s ease-in-out infinite alternate; }
+    .is-playing .bgm-bar:nth-child(2) { animation-duration: .56s; animation-delay: -.18s; }
+    .is-playing .bgm-bar:nth-child(3) { animation-duration: .83s; animation-delay: -.34s; }
+    .is-playing .bgm-bar:nth-child(4) { animation-duration: .64s; animation-delay: -.09s; }
+    .bgm-copy { display: grid; text-align: left; line-height: 1; }
+    .bgm-name { font-size: .65rem; font-weight: 600; letter-spacing: .08em; white-space: nowrap; }
+    .bgm-status { margin-top: 4px; color: rgba(255,255,255,.38); font-size: .48rem; letter-spacing: .16em; text-transform: uppercase; }
+    .is-playing .bgm-name { animation: bgm-glow 2.2s ease-in-out infinite; }
+
+    @keyframes bgm-wave {
+      0% { transform: scaleY(.38); }
+      45% { transform: scaleY(1.22); }
+      100% { transform: scaleY(.68); }
+    }
+    @keyframes bgm-glow {
+      0%, 100% { text-shadow: 0 0 0 rgba(255,255,255,0); }
+      50% { text-shadow: 0 0 10px rgba(255,255,255,.42); }
+    }
+
     .gallery {
       position: relative;
       z-index: 2;
@@ -149,6 +198,10 @@
     }
 
     .memory-card {
+      --tilt-x: 0deg;
+      --tilt-y: 0deg;
+      --glare-x: 50%;
+      --glare-y: 50%;
       position: absolute;
       top: 50%;
       left: 50%;
@@ -198,8 +251,18 @@
       filter: none;
       box-shadow: 0 35px 90px rgba(0,0,0,.56), 0 0 0 1px rgba(255,255,255,.07), 0 0 58px rgba(255,255,255,.09);
       cursor: default;
-      transform: translate3d(-50%, -50%, 70px) rotateY(0) scale(1);
+      transform: translate3d(-50%, -50%, 70px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y)) scale(1);
     }
+    .memory-card.is-active.is-tilting {
+      transition:
+        transform 90ms linear,
+        opacity 560ms ease,
+        filter 620ms ease,
+        box-shadow 240ms ease,
+        border-color 240ms ease;
+      box-shadow: 0 42px 105px rgba(0,0,0,.62), 0 0 0 1px rgba(255,255,255,.1), 0 0 72px rgba(255,255,255,.12);
+    }
+    .memory-card.is-active.is-resetting { transition: transform 400ms ease-out, box-shadow 400ms ease-out; }
     .memory-card.is-active img { transform: scale(1); }
     .memory-card.is-active::before { opacity: 0; }
     .memory-card.is-active::after { opacity: 0; }
@@ -215,6 +278,23 @@
     .memory-card.is-far-prev { transform: translate3d(calc(-50% - clamp(360px, 52vw, 720px)), -50%, -260px) rotateY(54deg) scale(.59); }
     .memory-card.is-far-next { transform: translate3d(calc(-50% + clamp(360px, 52vw, 720px)), -50%, -260px) rotateY(-54deg) scale(.59); }
     .memory-card.is-landscape-shape { height: min(45vh, 470px); }
+
+    .card-glare {
+      position: absolute;
+      z-index: 4;
+      inset: -1px;
+      border-radius: inherit;
+      opacity: 0;
+      background:
+        radial-gradient(circle at var(--glare-x) var(--glare-y), rgba(255,255,255,.52) 0, rgba(255,255,255,.2) 13%, rgba(255,255,255,.07) 28%, transparent 53%),
+        linear-gradient(120deg, transparent 22%, rgba(255,255,255,.08) 43%, transparent 62%);
+      box-shadow: inset 0 0 28px rgba(255,255,255,.06);
+      mix-blend-mode: screen;
+      pointer-events: none;
+      transition: opacity 320ms ease;
+      will-change: opacity, background;
+    }
+    .memory-card.is-active.is-tilting .card-glare { opacity: .72; }
 
     .card-index {
       position: absolute;
@@ -489,8 +569,15 @@
 
     @media (max-width: 820px) {
       :root { --header: 78px; }
-      .topbar { padding-right: 18px; padding-left: 18px; }
+      .topbar { padding-right: 12px; padding-left: 12px; }
+      .brand { gap: 8px; }
+      .brand-mark { width: 27px; height: 27px; }
+      .brand-title { font-size: .82rem; }
+      .top-actions { gap: 5px; }
       .brand-subtitle, .category-nav, .hint { display: none; }
+      .icon-button, .bgm-control { width: 34px; height: 34px; }
+      .bgm-control { padding: 0; justify-content: center; }
+      .bgm-copy { display: none; }
       .gallery { padding-top: calc(var(--header) + 4px); padding-bottom: 24px; }
       .stage { height: min(62vh, 570px); min-height: 340px; }
       .memory-card { width: auto; height: min(55vh, 500px); max-width: 78vw; }
@@ -516,6 +603,8 @@
     }
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+      .is-playing .bgm-bar, .is-playing .bgm-name { animation: none !important; }
+      .card-glare { display: none !important; }
     }
   </style>
 </head>
@@ -536,6 +625,15 @@
       </span>
     </a>
     <div class="top-actions">
+      <button id="bgm-control" class="bgm-control" type="button" aria-label="播放背景音乐" aria-pressed="false">
+        <span class="bgm-visualizer" aria-hidden="true">
+          <span class="bgm-bar"></span><span class="bgm-bar"></span><span class="bgm-bar"></span><span class="bgm-bar"></span>
+        </span>
+        <span class="bgm-copy">
+          <span class="bgm-name">Memory Melody</span>
+          <span id="bgm-status" class="bgm-status">Paused</span>
+        </span>
+      </button>
       <nav id="category-nav" class="category-nav" aria-label="照片年份分类"></nav>
       <button id="edit-button" class="icon-button" type="button" aria-label="编辑当前照片资料" aria-expanded="false" aria-controls="editor-overlay">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 4.2-1 10.7-10.7a2.1 2.1 0 0 0-3-3L5.2 16 4 20Z"></path><path d="m14.5 6.7 3 3"></path></svg>
@@ -545,6 +643,10 @@
       </button>
     </div>
   </header>
+
+  <audio id="bgm-audio" preload="metadata" loop>
+    <source src="./audio/bgm.mp3" type="audio/mpeg">
+  </audio>
 
   <main class="gallery" aria-label="大学回忆 3D 卡片画册">
     <section class="stage-wrap" aria-roledescription="轮播图" aria-label="大学照片">
@@ -741,6 +843,9 @@
     const importButton = document.getElementById("import-data");
     const importFile = document.getElementById("import-file");
     const saveStatus = document.getElementById("save-status");
+    const bgmControl = document.getElementById("bgm-control");
+    const bgmAudio = document.getElementById("bgm-audio");
+    const bgmStatus = document.getElementById("bgm-status");
 
     let activeIndex = 0;
     let visibleBackground = 0;
@@ -749,14 +854,66 @@
     let touchStartY = 0;
     let cards = [];
     let dots = [];
+    let bgmFadeFrame = 0;
+    let bgmUnavailable = false;
+    let autoWakeAttempted = false;
+    let tiltFrame = 0;
 
     const padNumber = number => String(number).padStart(2, "0");
+    const BGM_VOLUME = 0.35;
+    const tiltCapability = window.matchMedia("(hover: hover) and (pointer: fine) and (min-width: 821px)");
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const tiltResetTimers = new WeakMap();
+    bgmAudio.volume = BGM_VOLUME;
+    bgmAudio.loop = true;
 
     function circularOffset(index, current, length) {
       let offset = index - current;
       if (offset > length / 2) offset -= length;
       if (offset < -length / 2) offset += length;
       return offset;
+    }
+
+    function canUseTilt() {
+      return tiltCapability.matches && !reducedMotion.matches;
+    }
+
+    function resetCardTilt(card, immediate = false) {
+      cancelAnimationFrame(tiltFrame);
+      clearTimeout(tiltResetTimers.get(card));
+      card.classList.remove("is-tilting");
+      if (!immediate && card.classList.contains("is-active")) card.classList.add("is-resetting");
+      else card.classList.remove("is-resetting");
+      card.style.setProperty("--tilt-x", "0deg");
+      card.style.setProperty("--tilt-y", "0deg");
+      card.style.setProperty("--glare-x", "50%");
+      card.style.setProperty("--glare-y", "50%");
+
+      if (!immediate) {
+        const timer = window.setTimeout(() => card.classList.remove("is-resetting"), 420);
+        tiltResetTimers.set(card, timer);
+      }
+    }
+
+    function handleCardTilt(event) {
+      const card = event.currentTarget;
+      if (!canUseTilt() || !card.classList.contains("is-active")) return;
+      const bounds = card.getBoundingClientRect();
+      const relativeX = Math.min(Math.max((event.clientX - bounds.left) / bounds.width, 0), 1);
+      const relativeY = Math.min(Math.max((event.clientY - bounds.top) / bounds.height, 0), 1);
+      const rotateX = (0.5 - relativeY) * 13;
+      const rotateY = (relativeX - 0.5) * 14;
+
+      cancelAnimationFrame(tiltFrame);
+      tiltFrame = requestAnimationFrame(() => {
+        clearTimeout(tiltResetTimers.get(card));
+        card.classList.remove("is-resetting");
+        card.classList.add("is-tilting");
+        card.style.setProperty("--tilt-x", `${rotateX.toFixed(2)}deg`);
+        card.style.setProperty("--tilt-y", `${rotateY.toFixed(2)}deg`);
+        card.style.setProperty("--glare-x", `${(relativeX * 100).toFixed(1)}%`);
+        card.style.setProperty("--glare-y", `${(relativeY * 100).toFixed(1)}%`);
+      });
     }
 
     function makeCard(memory, index) {
@@ -789,10 +946,16 @@
       const title = document.createElement("h2");
       title.className = "card-title";
       title.textContent = memory.title;
+      const glare = document.createElement("span");
+      glare.className = "card-glare";
+      glare.setAttribute("aria-hidden", "true");
       copy.append(tag, title);
-      card.append(image, cardIndex, copy);
+      card.append(image, cardIndex, copy, glare);
 
       card.addEventListener("click", () => activeIndex !== index && goTo(index));
+      card.addEventListener("pointermove", handleCardTilt);
+      card.addEventListener("pointerleave", () => resetCardTilt(card));
+      card.addEventListener("pointercancel", () => resetCardTilt(card));
       card.addEventListener("keydown", event => {
         if ((event.key === "Enter" || event.key === " ") && activeIndex !== index) {
           event.preventDefault();
@@ -862,6 +1025,7 @@
     function updateGallery(animateBackground = true) {
       cards.forEach((card, index) => {
         const offset = circularOffset(index, activeIndex, memories.length);
+        resetCardTilt(card, true);
         card.className = `memory-card is-${memories[index].aspectRatio || "portrait"}-shape`;
         card.removeAttribute("aria-current");
         if (offset === 0) {
@@ -907,6 +1071,85 @@
 
     const showPrevious = () => goTo(activeIndex - 1);
     const showNext = () => goTo(activeIndex + 1);
+
+    function setBgmUi(playing, status = playing ? "Playing" : "Paused") {
+      bgmControl.classList.toggle("is-playing", playing);
+      bgmControl.setAttribute("aria-pressed", String(playing));
+      bgmControl.setAttribute("aria-label", playing ? "暂停背景音乐" : "播放背景音乐");
+      bgmStatus.textContent = status;
+    }
+
+    function markBgmUnavailable() {
+      bgmUnavailable = true;
+      cancelAnimationFrame(bgmFadeFrame);
+      bgmControl.classList.remove("is-playing");
+      bgmControl.classList.add("is-unavailable");
+      bgmControl.setAttribute("aria-pressed", "false");
+      bgmControl.setAttribute("aria-label", "背景音乐尚未添加，请放入 audio/bgm.mp3");
+      bgmStatus.textContent = "Add bgm.mp3";
+    }
+
+    function fadeVolume(target, duration, onComplete) {
+      cancelAnimationFrame(bgmFadeFrame);
+      const from = bgmAudio.volume;
+      const startedAt = performance.now();
+
+      function step(now) {
+        const progress = Math.min((now - startedAt) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        bgmAudio.volume = Math.min(1, Math.max(0, from + (target - from) * eased));
+        if (progress < 1) bgmFadeFrame = requestAnimationFrame(step);
+        else onComplete?.();
+      }
+
+      bgmFadeFrame = requestAnimationFrame(step);
+    }
+
+    async function playBgm() {
+      if (bgmUnavailable || !bgmAudio.paused) return;
+      cancelAnimationFrame(bgmFadeFrame);
+      bgmAudio.volume = 0;
+      try {
+        await bgmAudio.play();
+        setBgmUi(true);
+        fadeVolume(BGM_VOLUME, 1100);
+      } catch (error) {
+        bgmAudio.volume = BGM_VOLUME;
+        if (bgmAudio.error) markBgmUnavailable();
+        else setBgmUi(false, "Tap to play");
+      }
+    }
+
+    function pauseBgm() {
+      if (bgmAudio.paused) {
+        setBgmUi(false);
+        return;
+      }
+      fadeVolume(0, 420, () => {
+        bgmAudio.pause();
+        bgmAudio.volume = BGM_VOLUME;
+        setBgmUi(false);
+      });
+    }
+
+    bgmControl.addEventListener("click", () => {
+      autoWakeAttempted = true;
+      if (bgmAudio.paused) playBgm();
+      else pauseBgm();
+    });
+
+    bgmAudio.addEventListener("play", () => setBgmUi(true));
+    bgmAudio.addEventListener("pause", () => setBgmUi(false));
+    bgmAudio.addEventListener("error", markBgmUnavailable);
+
+    document.addEventListener("click", event => {
+      if (autoWakeAttempted || bgmUnavailable || !bgmAudio.paused) return;
+      if (event.target.closest(".memory-card, .arrow")) {
+        autoWakeAttempted = true;
+        playBgm();
+      }
+    }, { capture: true });
+
     previousButton.addEventListener("click", showPrevious);
     nextButton.addEventListener("click", showNext);
     document.querySelector(".brand").addEventListener("click", event => {
@@ -1091,6 +1334,12 @@
     }
     aboutButton.addEventListener("click", openAbout);
     aboutClose.addEventListener("click", closeAbout);
+
+    function syncTiltCapability() {
+      if (!canUseTilt()) cards.forEach(card => resetCardTilt(card, true));
+    }
+    tiltCapability.addEventListener("change", syncTiltCapability);
+    reducedMotion.addEventListener("change", syncTiltCapability);
 
     async function initialiseGallery() {
       try {
