@@ -13,6 +13,8 @@
   <style>
     :root {
       --bg: #121214;
+      --paper: #f3f0e8;
+      --memory-rgb: 92, 82, 72;
       --text: #f7f4ee;
       --muted: rgba(247, 244, 238, .62);
       --line: rgba(255, 255, 255, .17);
@@ -21,6 +23,7 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    [hidden] { display: none !important; }
     html { color-scheme: dark; background: var(--bg); }
     body {
       min-width: 320px;
@@ -39,23 +42,35 @@
     .backdrop { position: fixed; z-index: 0; inset: -80px; overflow: hidden; background: var(--bg); }
     .backdrop-layer {
       position: absolute;
+      z-index: 0;
       inset: 0;
       opacity: 0;
       background-position: center;
       background-size: cover;
-      filter: blur(48px) brightness(.38) saturate(1.16);
-      transform: scale(1.16);
-      transition: opacity 900ms ease;
+      filter: blur(56px) brightness(.28) saturate(.92);
+      transform: scale(1.18);
+      transition: opacity 880ms ease;
       will-change: opacity;
     }
-    .backdrop-layer.is-visible { opacity: 1; }
+    .backdrop-layer.is-visible { opacity: .86; }
+    .backdrop::before {
+      content: "";
+      position: absolute;
+      z-index: 1;
+      inset: 0;
+      background-color: rgba(var(--memory-rgb), .2);
+      mix-blend-mode: color;
+      pointer-events: none;
+      transition: background-color 880ms ease;
+    }
     .backdrop::after {
       content: "";
       position: absolute;
+      z-index: 2;
       inset: 0;
       background:
-        radial-gradient(circle at 50% 43%, transparent, rgba(9,9,11,.08) 38%, rgba(9,9,11,.74)),
-        linear-gradient(180deg, rgba(8,8,10,.38), transparent 40%, rgba(8,8,10,.52));
+        radial-gradient(circle at 50% 42%, rgba(7,7,9,.06), rgba(7,7,9,.26) 42%, rgba(7,7,9,.82)),
+        linear-gradient(180deg, rgba(7,7,9,.58), rgba(8,8,10,.12) 38%, rgba(7,7,9,.68));
     }
     .noise {
       position: fixed;
@@ -91,57 +106,67 @@
     .discovery-bar {
       z-index: 45;
       display: flex;
-      width: min(92vw, 980px);
+      width: min(88vw, 920px);
       min-width: 0;
       align-items: center;
       justify-self: center;
-      gap: 10px;
+      gap: 22px;
     }
     .category-nav {
       display: flex;
       min-width: 0;
       flex: 1;
-      gap: 3px;
+      gap: 15px;
       overflow-x: auto;
-      padding: 4px;
-      border: 1px solid rgba(255,255,255,.12);
-      border-radius: 999px;
-      background: rgba(12,12,14,.18);
-      backdrop-filter: blur(16px);
+      padding: 3px 1px 5px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
       scrollbar-width: none;
     }
     .category-nav::-webkit-scrollbar { display: none; }
     .category-button, .icon-button { border: 0; cursor: pointer; }
     .category-button {
-      border-radius: 999px;
-      padding: 8px 13px;
-      color: rgba(255,255,255,.58);
+      position: relative;
+      flex: 0 0 auto;
+      padding: 6px 0;
+      color: rgba(255,255,255,.46);
       background: transparent;
-      font-size: .69rem;
-      font-weight: 600;
-      letter-spacing: .09em;
+      font-size: .64rem;
+      font-weight: 500;
+      letter-spacing: .13em;
       text-transform: uppercase;
-      transition: color 220ms ease, background 220ms ease;
+      transition: color 220ms ease, opacity 220ms ease;
     }
-    .category-button:hover, .category-button.is-active { color: #fff; background: rgba(255,255,255,.13); }
+    .category-button::after {
+      content: "";
+      position: absolute;
+      right: 0;
+      bottom: -6px;
+      left: 0;
+      height: 1px;
+      opacity: 0;
+      background: rgba(255,255,255,.78);
+      transform: scaleX(.35);
+      transition: opacity 220ms ease, transform 300ms var(--ease);
+    }
+    .category-button:hover { color: rgba(255,255,255,.82); }
+    .category-button.is-active { color: #fff; }
+    .category-button.is-active::after { opacity: 1; transform: scaleX(1); }
     .memory-search {
       display: flex;
-      width: clamp(170px, 24vw, 270px);
-      height: 40px;
+      width: clamp(190px, 23vw, 265px);
+      height: 34px;
       flex: 0 0 auto;
       align-items: center;
       gap: 8px;
-      border: 1px solid rgba(255,255,255,.12);
-      border-radius: 999px;
-      padding: 0 13px;
-      background: rgba(12,12,14,.24);
-      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255,255,255,.13);
+      padding: 0 2px;
+      background: transparent;
       transition: border-color 220ms, background 220ms;
     }
-    .memory-search:focus-within { border-color: rgba(255,255,255,.4); background: rgba(12,12,14,.45); }
+    .memory-search:focus-within { border-color: rgba(255,255,255,.48); }
     .memory-search svg { width: 15px; height: 15px; flex: 0 0 auto; fill: none; stroke: rgba(255,255,255,.55); stroke-width: 1.7; }
-    .memory-search input { width: 100%; border: 0; outline: 0; color: #fff; background: transparent; font: inherit; font-size: .72rem; }
-    .memory-search input::placeholder { color: rgba(255,255,255,.4); }
+    .memory-search input { width: 100%; border: 0; outline: 0; color: #fff; background: transparent; font: inherit; font-size: .68rem; letter-spacing: .025em; }
+    .memory-search input::placeholder { color: rgba(255,255,255,.34); }
     .search-shortcut { color: rgba(255,255,255,.32); font-size: .62rem; }
     .icon-button {
       display: grid;
@@ -246,7 +271,7 @@
       width: 100%;
       height: min(59vh, 610px);
       min-height: 360px;
-      perspective: 1500px;
+      perspective: 1680px;
       perspective-origin: 50% 48%;
       touch-action: pan-y;
       user-select: none;
@@ -257,6 +282,7 @@
     .memory-card {
       --tilt-x: 0deg;
       --tilt-y: 0deg;
+      --card-rotation: 0deg;
       --glare-x: 50%;
       --glare-y: 50%;
       position: absolute;
@@ -266,11 +292,11 @@
       height: min(57vh, 590px);
       aspect-ratio: var(--card-ratio, 3 / 4);
       overflow: hidden;
-      border: 1px solid rgba(255,255,255,.17);
-      border-radius: clamp(16px, 2vw, 26px);
+      border: 1px solid rgba(243,240,232,.34);
+      border-radius: clamp(6px, .8vw, 10px);
       opacity: 0;
-      background: transparent;
-      box-shadow: 0 20px 50px rgba(0,0,0,.25);
+      background: var(--paper);
+      box-shadow: 0 2px 4px rgba(0,0,0,.2), 0 18px 42px rgba(0,0,0,.25);
       cursor: pointer;
       transform: translate3d(-50%, -50%, -420px) scale(.48);
       transform-style: preserve-3d;
@@ -299,17 +325,29 @@
       pointer-events: none;
       transition: opacity 620ms ease;
     }
-    .memory-card::before { opacity: .38; background: rgba(5,5,7,.38); }
-    .memory-card::after { display: none; }
+    .memory-card::before { opacity: .4; background: rgba(5,5,7,.4); }
+    .memory-card::after {
+      opacity: .14;
+      background:
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.92' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)' opacity='.28'/%3E%3C/svg%3E"),
+        rgba(154, 116, 70, .08);
+      mix-blend-mode: multiply;
+    }
     .memory-card.is-active {
+      --card-rotation: .38deg;
       z-index: 20;
       opacity: 1;
-      border-color: rgba(255,255,255,.46);
+      border-color: rgba(243,240,232,.62);
       filter: none;
-      box-shadow: 0 35px 90px rgba(0,0,0,.56), 0 0 0 1px rgba(255,255,255,.07), 0 0 58px rgba(255,255,255,.09);
+      box-shadow:
+        0 2px 3px rgba(0,0,0,.24),
+        0 18px 44px rgba(0,0,0,.34),
+        0 42px 92px rgba(0,0,0,.42),
+        0 0 0 1px rgba(243,240,232,.08);
       cursor: default;
-      transform: translate3d(-50%, -50%, 70px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y)) scale(1);
+      transform: translate3d(-50%, -50%, 72px) rotateZ(var(--card-rotation)) rotateX(var(--tilt-x)) rotateY(var(--tilt-y)) scale(1);
     }
+    .memory-card.is-active:hover, .memory-card.is-active:focus-visible { --card-rotation: 0deg; }
     .memory-card.is-active.is-tilting {
       transition:
         transform 90ms linear,
@@ -317,23 +355,23 @@
         filter 620ms ease,
         box-shadow 240ms ease,
         border-color 240ms ease;
-      box-shadow: 0 42px 105px rgba(0,0,0,.62), 0 0 0 1px rgba(255,255,255,.1), 0 0 72px rgba(255,255,255,.12);
+      box-shadow: 0 3px 5px rgba(0,0,0,.24), 0 24px 56px rgba(0,0,0,.42), 0 46px 100px rgba(0,0,0,.46);
     }
     .memory-card.is-active.is-resetting { transition: transform 400ms ease-out, box-shadow 400ms ease-out; }
     .memory-card.is-active img { transform: scale(1); }
     .memory-card.is-active::before { opacity: 0; }
-    .memory-card.is-active::after { opacity: 0; }
-    .memory-card.is-prev, .memory-card.is-next { z-index: 12; opacity: .76; filter: blur(1.1px) saturate(.82); }
-    .memory-card.is-prev { transform: translate3d(calc(-50% - clamp(230px, 31vw, 460px)), -50%, -115px) rotateY(42deg) scale(.79); }
-    .memory-card.is-next { transform: translate3d(calc(-50% + clamp(230px, 31vw, 460px)), -50%, -115px) rotateY(-42deg) scale(.79); }
+    .memory-card.is-active::after { opacity: .12; }
+    .memory-card.is-prev, .memory-card.is-next { z-index: 12; opacity: .68; filter: blur(.85px) saturate(.76); }
+    .memory-card.is-prev { transform: translate3d(calc(-50% - clamp(235px, 31vw, 470px)), -50%, -135px) rotateY(36deg) rotateZ(-1.2deg) scale(.77); }
+    .memory-card.is-next { transform: translate3d(calc(-50% + clamp(235px, 31vw, 470px)), -50%, -135px) rotateY(-36deg) rotateZ(1deg) scale(.77); }
     .memory-card.is-far-prev, .memory-card.is-far-next {
       z-index: 5;
-      opacity: .22;
-      filter: blur(4px) saturate(.55);
+      opacity: .14;
+      filter: blur(5.2px) saturate(.48);
       pointer-events: none;
     }
-    .memory-card.is-far-prev { transform: translate3d(calc(-50% - clamp(360px, 52vw, 720px)), -50%, -260px) rotateY(54deg) scale(.59); }
-    .memory-card.is-far-next { transform: translate3d(calc(-50% + clamp(360px, 52vw, 720px)), -50%, -260px) rotateY(-54deg) scale(.59); }
+    .memory-card.is-far-prev { transform: translate3d(calc(-50% - clamp(370px, 52vw, 740px)), -50%, -285px) rotateY(55deg) rotateZ(-2.1deg) scale(.56); }
+    .memory-card.is-far-next { transform: translate3d(calc(-50% + clamp(370px, 52vw, 740px)), -50%, -285px) rotateY(-55deg) rotateZ(2.25deg) scale(.56); }
     .memory-card.is-landscape-shape { height: min(45vh, 470px); }
 
     .multi-badge {
@@ -419,82 +457,88 @@
       top: 50%;
       left: 50%;
       display: flex;
-      width: min(96vw, 1160px);
+      width: min(94vw, 1240px);
       justify-content: space-between;
       pointer-events: none;
       transform: translate(-50%, -50%);
     }
     .arrow {
       display: grid;
-      width: clamp(46px, 5vw, 58px);
-      height: clamp(46px, 5vw, 58px);
+      width: clamp(38px, 4vw, 44px);
+      height: clamp(38px, 4vw, 44px);
       place-items: center;
-      border: 1px solid var(--line);
+      border: 1px solid rgba(255,255,255,.13);
       border-radius: 50%;
-      color: #fff;
-      background: rgba(14,14,17,.25);
-      box-shadow: 0 10px 30px rgba(0,0,0,.15);
-      backdrop-filter: blur(16px);
+      opacity: .62;
+      color: rgba(255,255,255,.84);
+      background: rgba(12,12,15,.12);
+      box-shadow: 0 8px 24px rgba(0,0,0,.12);
+      backdrop-filter: blur(10px);
       cursor: pointer;
       pointer-events: auto;
-      transition: background 220ms, border-color 220ms, transform 220ms;
+      transition: opacity 200ms ease, background 220ms ease, border-color 220ms ease, transform 260ms var(--ease);
     }
-    .arrow:hover { border-color: rgba(255,255,255,.5); background: rgba(255,255,255,.15); transform: scale(1.06); }
-    .arrow svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-width: 1.6; }
+    .arrow:hover, .arrow:focus-visible { opacity: 1; border-color: rgba(255,255,255,.42); background: rgba(255,255,255,.1); transform: scale(1.035); }
+    .arrow svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-width: 1.45; }
 
     .meta-panel {
       z-index: 30;
       display: grid;
-      width: min(88vw, 590px);
+      width: min(84vw, 660px);
       justify-self: center;
       grid-template-columns: 1fr auto;
       align-items: end;
-      gap: 28px;
+      gap: 34px;
     }
-    .meta-copy { min-width: 0; }
+    .meta-copy { min-width: 0; padding-left: 16px; border-left: 1px solid rgba(255,255,255,.16); }
     .meta-tools { display: grid; justify-items: end; gap: 5px; }
     .meta-title {
-      margin-bottom: 4px;
+      margin-bottom: 7px;
       overflow: hidden;
       font-family: "Playfair Display", "Noto Sans SC", serif;
-      font-size: clamp(1.05rem, 2vw, 1.4rem);
-      font-weight: 600;
-      letter-spacing: .015em;
+      font-size: clamp(1.35rem, 2.4vw, 1.9rem);
+      font-weight: 500;
+      letter-spacing: .005em;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
     .meta-subtitle {
       overflow: hidden;
-      color: rgba(255,255,255,.82);
-      font-family: "Playfair Display", "Noto Sans SC", serif;
-      font-size: clamp(.96rem, 1.8vw, 1.18rem);
-      font-style: italic;
-      line-height: 1.3;
+      color: rgba(255,255,255,.72);
+      font-family: "DM Sans", "Noto Sans SC", sans-serif;
+      font-size: clamp(.78rem, 1.3vw, .92rem);
+      line-height: 1.55;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    .meta-date { margin-top: 5px; color: var(--muted); font-size: .7rem; letter-spacing: .15em; text-transform: uppercase; }
+    .meta-subtitle.is-placeholder { color: rgba(255,255,255,.38); }
+    .meta-date { margin-top: 8px; color: rgba(255,255,255,.46); font-family: "DM Sans", monospace; font-size: .61rem; font-weight: 500; letter-spacing: .17em; line-height: 1.5; text-transform: uppercase; }
+    .meta-date.is-placeholder { color: rgba(255,255,255,.3); }
     .dots {
       display: flex;
       max-width: 270px;
       align-items: center;
       justify-content: flex-start;
-      gap: 7px;
+      gap: 8px;
       overflow-x: auto;
       padding: 8px 2px;
       scrollbar-width: none;
     }
     .dots::-webkit-scrollbar { display: none; }
     .dot {
-      width: 6px;
-      height: 6px;
+      width: 2px;
+      height: 8px;
       border: 0;
       border-radius: 999px;
+      opacity: .5;
       background: rgba(255,255,255,.3);
       cursor: pointer;
-      transition: width 350ms var(--ease), background 350ms;
+      transform-origin: center;
+      transition: width 350ms var(--ease), height 300ms var(--ease), opacity 220ms ease, background 300ms, transform 220ms ease;
     }
-    .dot.is-active { width: 26px; background: #fff; }
+    .dot.is-near { height: 11px; opacity: .72; background: rgba(255,255,255,.52); }
+    .dot:hover, .dot:focus-visible { opacity: 1; background: rgba(255,255,255,.86); transform: scaleY(1.3); }
+    .dot.is-active { width: 24px; height: 2px; opacity: 1; background: #fff; }
     .postcard-button {
       display: inline-flex;
       align-items: center;
@@ -518,12 +562,16 @@
       bottom: clamp(20px, 4vh, 40px);
       display: flex;
       align-items: baseline;
-      gap: 5px;
+      gap: 6px;
       color: rgba(255,255,255,.4);
-      font-size: .64rem;
-      letter-spacing: .08em;
+      font-family: "DM Sans", monospace;
+      font-size: .58rem;
+      font-weight: 500;
+      letter-spacing: .13em;
+      text-transform: uppercase;
     }
-    .progress-current { color: #fff; font-family: "Playfair Display", serif; font-size: 1.35rem; }
+    .progress-prefix { margin-right: 4px; color: rgba(255,255,255,.32); }
+    .progress-current { color: rgba(255,255,255,.92); font-size: .78rem; }
     .hint {
       position: fixed;
       z-index: 30;
@@ -616,6 +664,23 @@
       user-select: none;
     }
     .detail-image.is-changing { opacity: .3; transform: scale(.985); }
+    .detail-kicker, .detail-title, .detail-subtitle, .detail-story, .detail-meta, .detail-thumbnails, .detail-edit-button {
+      transition: opacity 220ms ease, transform 320ms var(--ease);
+    }
+    .detail-dialog.is-memory-changing .detail-image {
+      opacity: 0;
+      transform: translateX(var(--detail-shift, 20px)) scale(.985);
+    }
+    .detail-dialog.is-memory-changing .detail-kicker,
+    .detail-dialog.is-memory-changing .detail-title,
+    .detail-dialog.is-memory-changing .detail-subtitle,
+    .detail-dialog.is-memory-changing .detail-story,
+    .detail-dialog.is-memory-changing .detail-meta,
+    .detail-dialog.is-memory-changing .detail-thumbnails,
+    .detail-dialog.is-memory-changing .detail-edit-button {
+      opacity: 0;
+      transform: translateY(8px);
+    }
     .detail-arrow {
       position: absolute;
       z-index: 2;
@@ -635,6 +700,7 @@
     .detail-arrow[hidden] { display: none; }
     .detail-arrow.is-prev { left: 18px; }
     .detail-arrow.is-next { right: 18px; }
+    .detail-arrow:hover { border-color: rgba(255,255,255,.48); background: rgba(255,255,255,.14); }
     .detail-arrow svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; }
     .detail-sidebar { display: flex; min-height: 0; flex-direction: column; padding: 66px 28px 28px; }
     .detail-kicker { color: var(--muted); font-size: .63rem; letter-spacing: .16em; text-transform: uppercase; }
@@ -642,8 +708,10 @@
     .detail-subtitle { margin-top: 12px; color: rgba(255,255,255,.72); font-family: "Playfair Display", "Noto Sans SC", serif; font-size: 1rem; font-style: italic; line-height: 1.5; }
     .detail-story { margin-top: 22px; overflow-y: auto; color: rgba(255,255,255,.66); font-size: .82rem; line-height: 1.85; }
     .detail-meta { margin-top: 20px; color: rgba(255,255,255,.45); font-size: .66rem; letter-spacing: .08em; line-height: 1.75; }
+    .detail-meta.is-placeholder { color: rgba(255,255,255,.28); letter-spacing: .13em; }
     .detail-thumbnails { display: flex; gap: 8px; overflow-x: auto; margin-top: auto; padding-top: 24px; scrollbar-width: none; }
     .detail-thumbnails::-webkit-scrollbar { display: none; }
+    .detail-edit-button { width: 100%; margin-top: 18px; flex: 0 0 auto; }
     .detail-thumb {
       width: 54px;
       height: 54px;
@@ -678,6 +746,7 @@
     .export-postcard-subtitle { margin-top: 16px; color: #5f5960; font-family: "Playfair Display", "Noto Sans SC", serif; font-size: 26px; font-style: italic; }
     .export-postcard-story { margin-top: 24px; color: #6d676d; font-size: 20px; line-height: 1.75; white-space: pre-wrap; }
     .export-postcard-meta { display: flex; justify-content: space-between; gap: 20px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd7d0; color: #918b86; font-size: 17px; letter-spacing: 2px; text-transform: uppercase; }
+    body.is-sync-refreshing .gallery, body.is-sync-refreshing .topbar { opacity: .25; transition: opacity 420ms ease; }
 
     .about-panel {
       position: fixed;
@@ -705,7 +774,7 @@
     .about-panel p { margin-top: 24px; color: var(--muted); font-size: .9rem; line-height: 1.8; }
     .about-rule { width: 46px; height: 1px; margin-top: 32px; background: rgba(255,255,255,.4); }
 
-    /* 照片资料编辑器：资料保存在浏览器 localStorage。 */
+    /* 照片资料编辑器：仅由 localhost 管理服务启用。 */
     .editor-overlay {
       position: fixed;
       z-index: 180;
@@ -781,10 +850,37 @@
     .primary-button { flex: 1; border: 1px solid #fff; color: #111; background: #fff; }
     .secondary-button { border: 1px solid rgba(255,255,255,.17); color: rgba(255,255,255,.75); background: transparent; }
     .primary-button:hover, .secondary-button:hover { transform: translateY(-1px); }
+    .primary-button:disabled, .secondary-button:disabled { opacity: .48; cursor: wait; transform: none; }
+    .editor-panel.is-saving { cursor: progress; }
+    .editor-panel.is-saving .field { opacity: .64; }
     .backup-tools { margin-top: 28px; padding-top: 22px; border-top: 1px solid rgba(255,255,255,.1); }
     .backup-title { margin-bottom: 10px; color: var(--muted); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; }
     .backup-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-    .save-status { min-height: 20px; margin-top: 12px; color: #a6d9b2; font-size: .7rem; }
+    .save-status { min-height: 20px; margin-top: 12px; color: #a6d9b2; font-size: .7rem; line-height: 1.55; }
+    .save-status.is-processing { color: rgba(255,255,255,.7); }
+    .save-status.is-error { color: #efaaa4; }
+    .sync-toast {
+      position: fixed;
+      z-index: 400;
+      right: clamp(16px, 4vw, 48px);
+      bottom: clamp(18px, 4vh, 42px);
+      max-width: min(390px, calc(100vw - 32px));
+      visibility: hidden;
+      opacity: 0;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 14px;
+      padding: 13px 16px;
+      color: #fff;
+      background: rgba(20,20,23,.9);
+      box-shadow: 0 18px 50px rgba(0,0,0,.38);
+      backdrop-filter: blur(18px);
+      transform: translateY(12px);
+      transition: opacity 260ms ease, transform 340ms var(--ease), visibility 340ms;
+      font-size: .76rem;
+      line-height: 1.55;
+    }
+    .sync-toast.is-visible { visibility: visible; opacity: 1; transform: none; }
+    .sync-toast.is-error { border-color: rgba(239,170,164,.35); }
     .visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
     .upload-overlay {
@@ -872,18 +968,20 @@
       .upload-trigger { width: 32px; height: 32px; justify-content: center; padding: 0; }
       .upload-trigger-label { display: none; }
       .gallery { padding-top: calc(var(--header) + 4px); padding-bottom: 24px; }
-      .discovery-bar { width: calc(100vw - 28px); flex-direction: column-reverse; align-items: stretch; gap: 7px; }
+      .discovery-bar { width: calc(100vw - 28px); flex-direction: column-reverse; align-items: stretch; gap: 6px; }
       .memory-search { width: 100%; }
-      .category-nav { flex: none; }
+      .category-nav { flex: none; gap: 14px; }
       .stage { height: min(62vh, 570px); min-height: 340px; }
       .memory-card { width: min(78vw, 340px); height: auto; max-width: none; max-height: 52vh; }
       .memory-card.is-landscape-shape { width: min(84vw, 380px); height: auto; max-width: none; max-height: 39vh; }
-      .memory-card.is-prev { transform: translate3d(calc(-50% - 59vw), -50%, -135px) rotateY(46deg) scale(.72); }
-      .memory-card.is-next { transform: translate3d(calc(-50% + 59vw), -50%, -135px) rotateY(-46deg) scale(.72); }
+      .memory-card.is-prev { transform: translate3d(calc(-50% - 60vw), -50%, -145px) rotateY(42deg) rotateZ(-1.2deg) scale(.7); }
+      .memory-card.is-next { transform: translate3d(calc(-50% + 60vw), -50%, -145px) rotateY(-42deg) rotateZ(1deg) scale(.7); }
       .memory-card.is-far-prev, .memory-card.is-far-next { opacity: 0; }
       .controls { top: auto; bottom: -1px; width: min(92vw, 460px); }
-      .arrow { width: 44px; height: 44px; }
-      .meta-panel { width: min(72vw, 360px); min-height: 50px; grid-template-columns: 1fr; place-items: center; gap: 13px; text-align: center; }
+      .arrow { width: 39px; height: 39px; }
+      .meta-panel { width: min(78vw, 380px); min-height: 50px; grid-template-columns: 1fr; place-items: center; gap: 12px; text-align: center; }
+      .meta-copy { width: 100%; padding: 0 0 0 12px; border-left-color: rgba(255,255,255,.14); text-align: left; }
+      .meta-title { font-size: clamp(1.25rem, 6vw, 1.65rem); }
       .meta-tools { justify-items: center; }
       .meta-subtitle { white-space: normal; }
       .dots { max-width: 72vw; justify-content: center; }
@@ -943,7 +1041,7 @@
           <span id="bgm-status" class="bgm-status">Paused</span>
         </span>
       </button>
-      <button id="edit-button" class="icon-button" type="button" aria-label="编辑当前照片资料" aria-expanded="false" aria-controls="editor-overlay">
+      <button id="edit-button" class="icon-button" type="button" aria-label="编辑当前照片资料" aria-expanded="false" aria-controls="editor-overlay" hidden>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 4.2-1 10.7-10.7a2.1 2.1 0 0 0-3-3L5.2 16 4 20Z"></path><path d="m14.5 6.7 3 3"></path></svg>
       </button>
       <button id="about-button" class="icon-button" type="button" aria-label="关于这本画册" aria-expanded="false" aria-controls="about-panel">
@@ -961,7 +1059,7 @@
       <nav id="category-nav" class="category-nav" aria-label="事件标签分类"></nav>
       <label class="memory-search" for="memory-search-input">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4 4"></path></svg>
-        <input id="memory-search-input" type="search" autocomplete="off" placeholder="搜索标题、故事、日期、地点">
+        <input id="memory-search-input" type="search" autocomplete="off" placeholder="搜索一段回忆、地点或故事…">
         <span class="search-shortcut" aria-hidden="true">/</span>
       </label>
     </section>
@@ -998,8 +1096,10 @@
     Scroll or use arrow keys
   </div>
   <div class="progress-label" aria-hidden="true">
+    <span class="progress-prefix">Archive</span>
     <span id="progress-current" class="progress-current">01</span><span>/</span><span id="progress-total">01</span>
   </div>
+  <div id="sync-toast" class="sync-toast" role="status" aria-live="polite"></div>
 
   <aside id="about-panel" class="about-panel" aria-hidden="true" aria-labelledby="about-title">
     <button id="about-close" class="icon-button about-close" type="button" aria-label="关闭关于面板">
@@ -1064,10 +1164,10 @@
           <label for="memory-story">事件故事 / 备注</label>
           <textarea id="memory-story" name="story" maxlength="500" placeholder="写下当时发生的事、同行的人或想记住的一句话……"></textarea>
         </div>
-        <p class="form-help">资料只会保存在当前浏览器。整理完成后建议点击“导出备份”，下载一份 JSON 文件。</p>
+        <p class="form-help">保存后会自动重绘所有拍立得、更新 data.json，并提交推送到 GitHub。请保持本地服务终端开启。</p>
         <div class="form-actions">
           <button id="reset-current" class="secondary-button" type="button">清空当前</button>
-          <button class="primary-button" type="submit">保存这张照片</button>
+          <button id="metadata-submit" class="primary-button" type="submit">保存并同步到 GitHub</button>
         </div>
       </form>
 
@@ -1166,6 +1266,7 @@
         <p id="detail-subtitle" class="detail-subtitle"></p>
         <p id="detail-story" class="detail-story"></p>
         <p id="detail-meta" class="detail-meta"></p>
+        <button id="detail-edit" class="secondary-button detail-edit-button" type="button" hidden>编辑这个事件</button>
         <div id="detail-thumbnails" class="detail-thumbnails" aria-label="事件照片缩略图"></div>
       </div>
     </section>
@@ -1294,11 +1395,13 @@
     const locationInput = document.getElementById("memory-location");
     const subtitleInput = document.getElementById("memory-subtitle");
     const storyInput = document.getElementById("memory-story");
+    const metadataSubmit = document.getElementById("metadata-submit");
     const resetCurrentButton = document.getElementById("reset-current");
     const exportButton = document.getElementById("export-data");
     const importButton = document.getElementById("import-data");
     const importFile = document.getElementById("import-file");
     const saveStatus = document.getElementById("save-status");
+    const syncToast = document.getElementById("sync-toast");
     const bgmControl = document.getElementById("bgm-control");
     const bgmAudio = document.getElementById("bgm-audio");
     const bgmStatus = document.getElementById("bgm-status");
@@ -1314,6 +1417,7 @@
     const uploadStatus = document.getElementById("upload-status");
     const uploadSubmit = document.getElementById("upload-submit");
     const detailOverlay = document.getElementById("detail-overlay");
+    const detailDialog = detailOverlay.querySelector(".detail-dialog");
     const detailClose = document.getElementById("detail-close");
     const detailMedia = document.getElementById("detail-media");
     const detailImage = document.getElementById("detail-image");
@@ -1324,6 +1428,7 @@
     const detailSubtitle = document.getElementById("detail-subtitle");
     const detailStory = document.getElementById("detail-story");
     const detailMeta = document.getElementById("detail-meta");
+    const detailEdit = document.getElementById("detail-edit");
     const detailThumbnails = document.getElementById("detail-thumbnails");
     const exportPostcard = document.getElementById("export-postcard");
     const exportPostcardImage = document.getElementById("export-postcard-image");
@@ -1353,15 +1458,26 @@
     let searchTerm = "";
     let detailImageIndex = 0;
     let detailImages = [];
+    let detailTransitioning = false;
+    let detailTransitionToken = 0;
+    let detailImageRequest = 0;
+    let detailWheelLocked = false;
     let touchStartedAt = 0;
     let detailTouchStartX = 0;
     let detailTouchStartY = 0;
     let detailTouchStartedAt = 0;
     let exportingPostcard = false;
     let ignoreCardClickUntil = 0;
+    let localManagerReady = false;
+    let metadataSaving = false;
+    let syncToastTimer = 0;
+    let memoryColorRequest = 0;
 
     const padNumber = number => String(number).padStart(2, "0");
     const BGM_VOLUME = 0.35;
+    const COLOR_SAMPLE_SIZE = 24;
+    const sampledMemoryColors = new Map();
+    const placeholderMetadata = new Set(["", "待整理", "日期待填写", "活动待填写"]);
     const tiltCapability = window.matchMedia("(hover: hover) and (pointer: fine) and (min-width: 821px)");
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     const tiltResetTimers = new WeakMap();
@@ -1478,7 +1594,7 @@
       if (returnFocus) uploadButton.focus();
     }
 
-    async function initialiseUploader() {
+    async function initialiseLocalManager() {
       const localHostnames = new Set(["localhost", "127.0.0.1", "::1"]);
       if (!localHostnames.has(window.location.hostname)) return;
       try {
@@ -1487,10 +1603,14 @@
         const health = await response.json();
         if (!health.ok || !health.uploadToken) return;
         uploadToken = health.uploadToken;
+        localManagerReady = true;
         uploadButton.hidden = false;
+        editButton.hidden = false;
+        detailEdit.hidden = false;
         if (window.location.hash === "#upload") openUploadModal();
+        if (window.location.hash === "#edit") openEditor();
       } catch {
-        // A plain static server can still show the gallery, but not local uploads.
+        // A plain static server can still show the read-only gallery.
       }
     }
 
@@ -1574,6 +1694,16 @@
       return fromTag || String(memory.category || "待整理").trim() || "待整理";
     }
 
+    function isPlaceholderMetadata(value) {
+      return placeholderMetadata.has(String(value || "").trim());
+    }
+
+    function archiveMetadataParts(memory, includeEvent = true) {
+      const values = [memory.date, memory.location, memory.category];
+      if (includeEvent) values.push(memory.event);
+      return [...new Set(values.map(value => String(value || "").trim()).filter(value => !isPlaceholderMetadata(value)))];
+    }
+
     function makeCard(memory, index) {
       const card = document.createElement("article");
       card.className = `memory-card is-${memory.aspectRatio || "portrait"}-shape`;
@@ -1637,6 +1767,7 @@
       dot.type = "button";
       dot.className = "dot";
       dot.setAttribute("aria-label", `查看 ${memory.title}`);
+      dot.title = memory.title;
       dot.addEventListener("click", () => goTo(index));
       return dot;
     }
@@ -1727,6 +1858,66 @@
       preload.src = image;
     }
 
+    function updateMemoryColor(source) {
+      const requestId = ++memoryColorRequest;
+      const cached = sampledMemoryColors.get(source);
+      if (cached) {
+        document.documentElement.style.setProperty("--memory-rgb", cached.join(", "));
+        return;
+      }
+
+      const image = new Image();
+      image.crossOrigin = "anonymous";
+      image.decoding = "async";
+      image.onload = () => {
+        if (requestId !== memoryColorRequest) return;
+        try {
+          const canvas = document.createElement("canvas");
+          canvas.width = COLOR_SAMPLE_SIZE;
+          canvas.height = COLOR_SAMPLE_SIZE;
+          const context = canvas.getContext("2d", { willReadFrequently: true });
+          if (!context) return;
+          context.drawImage(image, 0, 0, COLOR_SAMPLE_SIZE, COLOR_SAMPLE_SIZE);
+          const pixels = context.getImageData(0, 0, COLOR_SAMPLE_SIZE, COLOR_SAMPLE_SIZE).data;
+          let red = 0;
+          let green = 0;
+          let blue = 0;
+          let totalWeight = 0;
+
+          for (let index = 0; index < pixels.length; index += 4) {
+            const alpha = pixels[index + 3] / 255;
+            if (alpha < .5) continue;
+            const pixelRed = pixels[index];
+            const pixelGreen = pixels[index + 1];
+            const pixelBlue = pixels[index + 2];
+            const maximum = Math.max(pixelRed, pixelGreen, pixelBlue);
+            const minimum = Math.min(pixelRed, pixelGreen, pixelBlue);
+            const luminance = pixelRed * .2126 + pixelGreen * .7152 + pixelBlue * .0722;
+            // Ignore the generated paper border and near-black shadow pixels.
+            if ((luminance > 232 && maximum - minimum < 28) || luminance < 18) continue;
+            const weight = alpha * (.72 + (maximum - minimum) / 510);
+            red += pixelRed * weight;
+            green += pixelGreen * weight;
+            blue += pixelBlue * weight;
+            totalWeight += weight;
+          }
+
+          if (totalWeight < 8) return;
+          const neutral = [92, 82, 72];
+          const average = [red, green, blue].map(channel => channel / totalWeight);
+          const tint = average.map((channel, index) => Math.round(Math.min(190, Math.max(38, neutral[index] + (channel - neutral[index]) * .72))));
+          sampledMemoryColors.set(source, tint);
+          if (requestId === memoryColorRequest) {
+            document.documentElement.style.setProperty("--memory-rgb", tint.join(", "));
+          }
+        } catch (error) {
+          console.debug("无法提取照片色彩，继续使用默认背景。", error);
+        }
+      };
+      image.onerror = () => {};
+      image.src = source;
+    }
+
     function updateGallery(animateBackground = true) {
       cards.forEach((card, index) => {
         const offset = circularOffset(index, activeIndex, memories.length);
@@ -1744,7 +1935,9 @@
 
       dots.forEach((dot, index) => {
         const selected = index === activeIndex;
+        const nearby = Math.abs(circularOffset(index, activeIndex, memories.length)) <= 2;
         dot.classList.toggle("is-active", selected);
+        dot.classList.toggle("is-near", nearby && !selected);
         dot.setAttribute("aria-current", selected ? "true" : "false");
       });
       dots[activeIndex]?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
@@ -1752,12 +1945,16 @@
       const memory = memories[activeIndex];
       activeTitle.textContent = memory.title;
       activeSubtitle.textContent = memory.subtitle || memory.story || memory.note || "";
-      activeDate.textContent = [memory.date, memory.location, memory.tag.replace("#", "")].filter(Boolean).join(" · ");
+      activeSubtitle.classList.toggle("is-placeholder", isPlaceholderMetadata(activeSubtitle.textContent) || activeSubtitle.textContent === "这张照片的故事，等你来填写");
+      const metadata = archiveMetadataParts(memory);
+      activeDate.textContent = metadata.length ? metadata.join(" · ") : "ARCHIVE ENTRY · DETAILS PENDING";
+      activeDate.classList.toggle("is-placeholder", !metadata.length);
       progressCurrent.textContent = padNumber(activeIndex + 1);
       document.querySelectorAll(".category-button").forEach(button => {
         button.classList.toggle("is-active", button.dataset.category === activeFilter);
       });
       if (animateBackground) updateBackground(memory.image);
+      updateMemoryColor(memory.image);
       preloadNearbyImages();
     }
 
@@ -1784,24 +1981,42 @@
       applyFilters(false);
     });
 
-    function updateDetailImage(index, animate = true) {
-      if (!detailImages.length) return;
-      detailImageIndex = (index + detailImages.length) % detailImages.length;
-      const nextSource = detailImages[detailImageIndex];
-      if (animate) detailImage.classList.add("is-changing");
-      const preload = new Image();
-      preload.onload = () => {
-        detailImage.src = nextSource;
-        detailImage.alt = `${memories[activeIndex].title} · ${detailImageIndex + 1} / ${detailImages.length}`;
-        requestAnimationFrame(() => detailImage.classList.remove("is-changing"));
-      };
-      preload.onerror = () => detailImage.classList.remove("is-changing");
-      preload.src = nextSource;
+    function updateDetailLabels() {
+      const memory = memories[activeIndex];
+      if (!memory) return;
+      const category = isPlaceholderMetadata(memory.category) ? "" : memory.category;
+      detailKicker.textContent = [`MEMORY ${padNumber(activeIndex + 1)} / ${padNumber(memories.length)}`, category, `${detailImageIndex + 1}/${detailImages.length}`].filter(Boolean).join(" · ");
       [...detailThumbnails.children].forEach((thumbnail, thumbnailIndex) => {
         thumbnail.classList.toggle("is-active", thumbnailIndex === detailImageIndex);
         thumbnail.setAttribute("aria-current", thumbnailIndex === detailImageIndex ? "true" : "false");
       });
-      detailKicker.textContent = `${memories[activeIndex].tag} · ${detailImageIndex + 1}/${detailImages.length}`;
+
+      const canNavigate = memories.length > 1 || detailImages.length > 1;
+      detailPrevious.hidden = !canNavigate;
+      detailNext.hidden = !canNavigate;
+      detailPrevious.setAttribute("aria-label", detailImageIndex > 0 ? "查看当前事件上一张照片" : "查看上一个回忆");
+      detailNext.setAttribute("aria-label", detailImageIndex < detailImages.length - 1 ? "查看当前事件下一张照片" : "查看下一个回忆");
+    }
+
+    function updateDetailImage(index, animate = true) {
+      if (!detailImages.length) return;
+      detailImageIndex = (index + detailImages.length) % detailImages.length;
+      const requestedIndex = detailImageIndex;
+      const nextSource = detailImages[requestedIndex];
+      const requestId = ++detailImageRequest;
+      if (animate) detailImage.classList.add("is-changing");
+      const preload = new Image();
+      preload.onload = () => {
+        if (requestId !== detailImageRequest) return;
+        detailImage.src = nextSource;
+        detailImage.alt = `${memories[activeIndex].title} · ${requestedIndex + 1} / ${detailImages.length}`;
+        requestAnimationFrame(() => detailImage.classList.remove("is-changing"));
+      };
+      preload.onerror = () => {
+        if (requestId === detailImageRequest) detailImage.classList.remove("is-changing");
+      };
+      preload.src = nextSource;
+      updateDetailLabels();
     }
 
     function buildDetailThumbnails() {
@@ -1816,9 +2031,75 @@
         image.alt = "";
         image.loading = "lazy";
         button.appendChild(image);
-        button.addEventListener("click", () => updateDetailImage(index));
+        button.addEventListener("click", () => {
+          if (!detailTransitioning) updateDetailImage(index);
+        });
         detailThumbnails.appendChild(button);
       });
+    }
+
+    function setDetailMemory(memory, initialImageIndex = 0, animateImage = false) {
+      detailImages = [memory.image, ...memory.subImages];
+      detailImageIndex = Math.min(Math.max(initialImageIndex, 0), detailImages.length - 1);
+      detailTitle.textContent = memory.title;
+      detailSubtitle.textContent = memory.subtitle || "";
+      detailStory.textContent = memory.story || memory.note || "这段回忆还没有写下故事。";
+      const metadata = archiveMetadataParts(memory);
+      detailMeta.textContent = metadata.length ? metadata.join(" · ") : "ARCHIVE ENTRY · DETAILS PENDING";
+      detailMeta.classList.toggle("is-placeholder", !metadata.length);
+      buildDetailThumbnails();
+      detailThumbnails.hidden = detailImages.length < 2;
+      updateDetailImage(detailImageIndex, animateImage);
+    }
+
+    async function switchDetailMemory(direction) {
+      if (detailTransitioning || memories.length < 2) return;
+      detailTransitioning = true;
+      const transitionId = ++detailTransitionToken;
+      const nextMemoryIndex = (activeIndex + direction + memories.length) % memories.length;
+      const nextMemory = memories[nextMemoryIndex];
+      const nextImages = [nextMemory.image, ...nextMemory.subImages];
+      const nextImageIndex = direction < 0 ? nextImages.length - 1 : 0;
+      detailDialog.style.setProperty("--detail-shift", `${direction > 0 ? -24 : 24}px`);
+      detailDialog.classList.add("is-memory-changing");
+
+      const preload = new Image();
+      const imageReady = new Promise(resolve => {
+        preload.onload = resolve;
+        preload.onerror = resolve;
+        preload.src = nextImages[nextImageIndex];
+      });
+      await Promise.all([imageReady, new Promise(resolve => window.setTimeout(resolve, 180))]);
+      if (transitionId !== detailTransitionToken) return;
+
+      activeIndex = nextMemoryIndex;
+      detailImage.classList.remove("is-changing");
+      detailImage.style.transform = "";
+      setDetailMemory(nextMemory, nextImageIndex, false);
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      if (transitionId !== detailTransitionToken) return;
+      detailDialog.style.setProperty("--detail-shift", `${direction > 0 ? 24 : -24}px`);
+      detailDialog.classList.remove("is-memory-changing");
+      window.setTimeout(() => {
+        if (transitionId === detailTransitionToken) detailTransitioning = false;
+      }, 330);
+    }
+
+    function navigateDetail(direction) {
+      if (detailTransitioning || !detailImages.length) return;
+      if (direction < 0 && detailImageIndex > 0) {
+        updateDetailImage(detailImageIndex - 1);
+        return;
+      }
+      if (direction > 0 && detailImageIndex < detailImages.length - 1) {
+        updateDetailImage(detailImageIndex + 1);
+        return;
+      }
+      if (memories.length > 1) {
+        switchDetailMemory(direction);
+        return;
+      }
+      if (detailImages.length > 1) updateDetailImage(direction < 0 ? detailImages.length - 1 : 0);
     }
 
     function openDetail() {
@@ -1827,17 +2108,10 @@
       closeAbout(false);
       closeEditor(false);
       if (uploadOverlay.classList.contains("is-open")) closeUploadModal(false);
-      detailImages = [memory.image, ...memory.subImages];
-      detailImageIndex = 0;
-      detailTitle.textContent = memory.title;
-      detailSubtitle.textContent = memory.subtitle || "";
-      detailStory.textContent = memory.story || memory.note || "这段回忆还没有写下故事。";
-      detailMeta.textContent = [memory.date, memory.location, memory.event].filter(Boolean).join(" · ");
-      detailPrevious.hidden = detailImages.length < 2;
-      detailNext.hidden = detailImages.length < 2;
-      buildDetailThumbnails();
-      detailThumbnails.hidden = detailImages.length < 2;
-      updateDetailImage(0, false);
+      detailTransitionToken += 1;
+      detailTransitioning = false;
+      detailDialog.classList.remove("is-memory-changing");
+      setDetailMemory(memory, 0, false);
       detailOverlay.classList.add("is-open");
       detailOverlay.setAttribute("aria-hidden", "false");
       document.body.setAttribute("data-detail-open", "true");
@@ -1845,17 +2119,23 @@
     }
 
     function closeDetail(returnFocus = true) {
+      const wasOpen = detailOverlay.classList.contains("is-open");
+      detailTransitionToken += 1;
+      detailTransitioning = false;
+      detailDialog.classList.remove("is-memory-changing");
       detailOverlay.classList.remove("is-open");
       detailOverlay.setAttribute("aria-hidden", "true");
       document.body.removeAttribute("data-detail-open");
+      if (wasOpen && memories.length) updateGallery();
       if (returnFocus) cards[activeIndex]?.focus({ preventScroll: true });
     }
 
-    const showPreviousDetailImage = () => updateDetailImage(detailImageIndex - 1);
-    const showNextDetailImage = () => updateDetailImage(detailImageIndex + 1);
+    const showPreviousDetailImage = () => navigateDetail(-1);
+    const showNextDetailImage = () => navigateDetail(1);
     detailPrevious.addEventListener("click", showPreviousDetailImage);
     detailNext.addEventListener("click", showNextDetailImage);
     detailClose.addEventListener("click", () => closeDetail());
+    detailEdit.addEventListener("click", () => openEditor());
     detailOverlay.addEventListener("click", event => {
       if (event.target === detailOverlay) closeDetail();
     });
@@ -2033,8 +2313,14 @@
         return;
       }
       if (detailOverlay.classList.contains("is-open")) {
-        if (event.key === "ArrowLeft") showPreviousDetailImage();
-        if (event.key === "ArrowRight") showNextDetailImage();
+        if (event.key === "ArrowLeft") {
+          event.preventDefault();
+          showPreviousDetailImage();
+        }
+        if (event.key === "ArrowRight") {
+          event.preventDefault();
+          showNextDetailImage();
+        }
         if (event.key === "Escape" || event.key === " " || event.key === "Enter") {
           event.preventDefault();
           closeDetail();
@@ -2095,6 +2381,21 @@
       stage.style.transform = "";
     }, { passive: true });
 
+    detailMedia.addEventListener("wheel", event => {
+      if (!detailOverlay.classList.contains("is-open")) return;
+      const movement = Math.abs(event.deltaX) >= 8
+        ? event.deltaX
+        : event.shiftKey && Math.abs(event.deltaY) >= 8
+          ? event.deltaY
+          : 0;
+      if (!movement) return;
+      event.preventDefault();
+      if (detailWheelLocked || detailTransitioning) return;
+      detailWheelLocked = true;
+      movement > 0 ? showNextDetailImage() : showPreviousDetailImage();
+      window.setTimeout(() => { detailWheelLocked = false; }, 480);
+    }, { passive: false });
+
     detailMedia.addEventListener("touchstart", event => {
       detailTouchStartX = event.changedTouches[0].clientX;
       detailTouchStartY = event.changedTouches[0].clientY;
@@ -2103,7 +2404,7 @@
     detailMedia.addEventListener("touchmove", event => {
       const deltaX = event.changedTouches[0].clientX - detailTouchStartX;
       const deltaY = event.changedTouches[0].clientY - detailTouchStartY;
-      if (detailImages.length < 2 || Math.abs(deltaX) <= Math.abs(deltaY) * 1.12) return;
+      if ((memories.length < 2 && detailImages.length < 2) || detailTransitioning || Math.abs(deltaX) <= Math.abs(deltaY) * 1.12) return;
       event.preventDefault();
       detailImage.style.transform = `translate3d(${Math.sign(deltaX) * Math.min(52, Math.abs(deltaX) * .28)}px, 0, 0)`;
     }, { passive: false });
@@ -2112,9 +2413,12 @@
       const deltaY = event.changedTouches[0].clientY - detailTouchStartY;
       const velocity = Math.abs(deltaX) / Math.max(performance.now() - detailTouchStartedAt, 1);
       detailImage.style.transform = "";
-      if (detailImages.length > 1 && (Math.abs(deltaX) > 64 || (Math.abs(deltaX) > 28 && velocity > .55)) && Math.abs(deltaX) > Math.abs(deltaY) * 1.15) {
+      if ((memories.length > 1 || detailImages.length > 1) && (Math.abs(deltaX) > 64 || (Math.abs(deltaX) > 28 && velocity > .55)) && Math.abs(deltaX) > Math.abs(deltaY) * 1.15) {
         deltaX < 0 ? showNextDetailImage() : showPreviousDetailImage();
       }
+    }, { passive: true });
+    detailMedia.addEventListener("touchcancel", () => {
+      detailImage.style.transform = "";
     }, { passive: true });
 
     function saveMemories() {
@@ -2169,11 +2473,12 @@
       locationInput.value = memory.location || "";
       subtitleInput.value = memory.subtitle === "这张照片的故事，等你来填写" ? "" : memory.subtitle;
       storyInput.value = memory.story || memory.note || "";
+      saveStatus.className = "save-status";
       saveStatus.textContent = "";
     }
 
     function openEditor() {
-      if (!memories.length) return;
+      if (!localManagerReady || !uploadToken || !memories.length) return;
       closeDetail(false);
       closeAbout(false);
       fillEditor();
@@ -2184,14 +2489,37 @@
     }
 
     function closeEditor(returnFocus = true) {
+      if (metadataSaving) return;
       editorOverlay.classList.remove("is-open");
       editorOverlay.setAttribute("aria-hidden", "true");
       editButton.setAttribute("aria-expanded", "false");
       if (returnFocus) editButton.focus();
     }
 
-    memoryForm.addEventListener("submit", event => {
+    function setMetadataSaving(saving) {
+      metadataSaving = saving;
+      editorPanel.classList.toggle("is-saving", saving);
+      metadataSubmit.disabled = saving;
+      resetCurrentButton.disabled = saving;
+      editorClose.disabled = saving;
+      memoryForm.querySelectorAll("input, textarea").forEach(field => { field.disabled = saving; });
+      metadataSubmit.textContent = saving ? "正在保存与同步…" : "保存并同步到 GitHub";
+    }
+
+    function showSyncToast(message, type = "success", duration = 3600) {
+      clearTimeout(syncToastTimer);
+      syncToast.className = `sync-toast is-visible${type === "error" ? " is-error" : ""}`;
+      syncToast.textContent = message;
+      syncToastTimer = window.setTimeout(() => syncToast.classList.remove("is-visible"), duration);
+    }
+
+    memoryForm.addEventListener("submit", async event => {
       event.preventDefault();
+      if (!localManagerReady || !uploadToken) {
+        saveStatus.className = "save-status is-error";
+        saveStatus.textContent = "本地管理服务未连接，请运行 npm run serve 后刷新页面。";
+        return;
+      }
       const memory = memories[activeIndex];
       const category = categoryInput.value.trim() || "待整理";
       const activity = eventInput.value.trim() || "活动待填写";
@@ -2204,10 +2532,37 @@
       memory.story = storyInput.value.trim();
       memory.tag = `#${category} · ${activity}`;
 
-      if (saveMemories()) {
-        refreshAllContent(memory.id);
-        fillEditor();
-        saveStatus.textContent = `照片 ${padNumber(activeIndex + 1)} 已保存到当前浏览器。`;
+      saveMemories();
+      setMetadataSaving(true);
+      saveStatus.className = "save-status is-processing";
+      saveStatus.textContent = "正在重新合成拍立得卡片并同步至 GitHub…";
+
+      try {
+        const response = await fetch("/api/save-metadata", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-local-upload-token": uploadToken
+          },
+          body: JSON.stringify({ memories: allMemories })
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || !result.success) throw new Error(result.message || "保存失败，请查看本地终端。 ");
+
+        localStorage.removeItem(STORAGE_KEY);
+        saveStatus.className = "save-status";
+        saveStatus.textContent = `${result.message} · commit ${result.commit}`;
+        showSyncToast(`保存成功 · ${result.updated} 条资料已同步 · commit ${result.commit}`);
+        setMetadataSaving(false);
+        window.setTimeout(() => {
+          document.body.classList.add("is-sync-refreshing");
+          window.setTimeout(() => window.location.reload(), 420);
+        }, 1050);
+      } catch (error) {
+        setMetadataSaving(false);
+        saveStatus.className = "save-status is-error";
+        saveStatus.textContent = error.message;
+        showSyncToast(error.message, "error", 5200);
       }
     });
 
@@ -2221,7 +2576,7 @@
       saveMemories();
       refreshAllContent(reset.id);
       fillEditor();
-      saveStatus.textContent = "当前照片资料已清空。";
+      saveStatus.textContent = "当前资料已恢复默认；点击“保存并同步到 GitHub”后才会写入文件。";
     });
 
     exportButton.addEventListener("click", () => {
@@ -2293,7 +2648,7 @@
     async function initialiseGallery() {
       try {
         baseMemories = await fetchBaseMemories();
-        allMemories = loadMemories(baseMemories);
+        allMemories = baseMemories;
         memories = allMemories;
         const requestedPhoto = Number(new URLSearchParams(window.location.search).get("photo"));
         if (Number.isInteger(requestedPhoto) && requestedPhoto >= 1 && requestedPhoto <= memories.length) {
@@ -2301,7 +2656,6 @@
         }
         buildCategories();
         buildGallery();
-        if (window.location.hash === "#edit") openEditor();
       } catch (error) {
         console.error(error);
         const message = document.createElement("p");
@@ -2312,8 +2666,12 @@
       }
     }
 
-    initialiseGallery();
-    initialiseUploader();
+    async function initialiseApp() {
+      await initialiseGallery();
+      await initialiseLocalManager();
+    }
+
+    initialiseApp();
   </script>
 </body>
 </html>
