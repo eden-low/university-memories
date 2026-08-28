@@ -110,6 +110,8 @@ app.post("/api/upload", (request, response) => {
     const title = cleanText(request.body.title, 60);
     const subtitle = cleanText(request.body.subtitle, 140);
     const date = cleanText(request.body.date, 40);
+    const category = cleanText(request.body.category, 30).replace(/^#+/, "") || "待整理";
+    const location = cleanText(request.body.location, 60);
     const story = cleanText(request.body.story, 500);
 
     if (!title) {
@@ -134,10 +136,13 @@ app.post("/api/upload", (request, response) => {
         title,
         subtitle: subtitle || story || "一张刚刚加入的大学回忆",
         story,
+        note: "",
+        location,
+        subImages: [],
         date: date || "日期待填写",
-        category: "待整理",
+        category,
         event: "新上传",
-        tag: "#待整理 · 新上传",
+        tag: `#${category}`,
         sourceFile: request.file.filename,
         image: "",
         aspectRatio: "pending"

@@ -109,7 +109,7 @@ async function processPhoto(fileName, index, existingData) {
     || {};
   const category = previous.category || "待整理";
   const event = previous.event || "活动待填写";
-  const tag = `#${category} · ${event}`;
+  const tag = previous.tag || `#${category} · ${event}`;
   const title = previous.title || `MEMORY ${String(index + 1).padStart(2, "0")}`;
 
   await sharp({
@@ -136,6 +136,9 @@ async function processPhoto(fileName, index, existingData) {
     title,
     subtitle: previous.subtitle || "这张照片的故事，等你来填写",
     story: previous.story || "",
+    note: previous.note || "",
+    location: previous.location || "",
+    subImages: Array.isArray(previous.subImages) ? previous.subImages : [],
     tag,
     category,
     event,

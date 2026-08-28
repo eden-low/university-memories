@@ -24,6 +24,19 @@
 
 `public/` 是完整的部署成品，需要提交到 Git。新增或替换原图后，再次运行 `npm run build` 即可更新。
 
+## 整理事件与关联照片
+
+每条 `public/data.json` 记录都可以填写 `tag`、`location`、`story`，并通过可选的 `subImages` 关联同一事件的副图。副图放入 `public/images/`，然后填写相对于 `public/` 的路径，例如：
+
+```json
+"tag": "#毕业&散伙",
+"location": "学校礼堂",
+"story": "大家聊到很晚才舍得离开。",
+"subImages": ["./images/graduation-02.webp", "./images/graduation-03.webp"]
+```
+
+`npm run build` 会保留这些字段和非 `memory-数字.webp` 的副图。网站会从 `tag` 自动生成筛选胶囊；按 `/` 搜索，按 `Space`/`Enter` 查看事件详情，按 `D` 导出当前明信片。
+
 ## 推送和开启 GitHub Pages（4 步）
 
 ```bash
